@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block title %} Certificate Mailer {% endblock %}
+
+{% block content %}
+   <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" id="newCredentialCheck" onchange="state_nueva_credencial(this)">
+      <label class="form-check-label" for="newCredentialCheck">Nueva credencial</label>
+   </div>
+
+   <form id="formData" >
+      <div class="mb-3 col-5" >
+         <select class="form-select" aria-label="Default select example" id="credentialSelect">
+           <option selected>Selecciona una credencial</option>
+           {% for credencial in credenciales %}
+              <option value="{{ credencial['path'] }}">{{ credencial['name'] }}</option>
+           {% endfor %}
+         </select>
+      
+         <label for="credencialTxt" class="form-label"></label>
+         <input type="text" class="form-control" id="credencialTxt" aria-describedby="credentialHelp" placeholder="Nombre de la credencial">
+      </div>
+
+     <div class="mb-3" id="spreadLinkSection">
+         <label for="spreadLinkTxt" class="form-label">Enlace de la hoja de Google</label>
+         <input type="text" class="form-control" id="spreadLinkTxt" aria-describedby="spreadLinkHelp">
+     </div>
+
+     <div class="mb-3 row" id="spreadRangeSection">
+         <div class="col-2">
+            <label for="celda1Txt" class="form-label">Celda Inicial</label>
+            <input type="text" class="form-control" id="celda1Txt" aria-describedby="spreadCellHelp">
+         </div>
+         <div class="col-2">
+            <label for="celda2Txt" class="form-label">Celda Final</label>
+            <input type="text" class="form-control" id="celda2Txt" aria-describedby="spreadCellHelp">
+         </div>
+     </div>
+
+     <div class="mb-3 row">
+         <div class="col-2">
+            <label for="faltaMaxima" class="form-label">Falta Maxima</label>
+            <input type="text" class="form-control" id="faltaMaxima" aria-describedby="spreadCellHelp">
+         </div>
+         <div class="col-5">
+            <label for="templateSelect" class="form-label">Plantilla</label>
+            <select class="form-select" aria-label="Default select example" id="templateSelect">
+              <option selected>Selecciona una plantilla</option>
+              {% for plantilla in plantillas %}
+                 <option value="{{ plantilla['path'] }}">{{ plantilla['name'] }}</option>
+              {% endfor %}
+            </select>
+        </div>
+     </div>
+
+      <div class="mb-3 form-check form-switch">
+         <input class="form-check-input" type="checkbox" role="switch" id="sendEmailCheck" onchange="state_enviar_email(this)">
+         <label class="form-check-label" for="sendEmailCheck">Enviar certificados por correo</label>
+      </div>
+     <div class="mb-3" id="emailSection">
+         <label for="subjectTxt" class="form-label">Asunto del Correo</label>
+         <input type="text" class="form-control" id="subjectTxt" aria-describedby="spreadCellHelp">
+
+         <label for="bodyTxt" class="form-label bg">Mensaje</label>
+         <textarea class="form-control" aria-label="Body Message" id="bodyTxt" ></textarea>
+     </div>
+     
+   </form>
+   <div class="mb-3" >
+      <button class="btn btn-primary" type="button" id="btnEnviar">Generar Certificados</button>
+     
+      <button class="btn btn-link" id="btnSelectDir">Abrir ubicacion de certificados</button>    
+   </div>
+   
+   <div id="responseLbl" style="text-align: center;"></label>
+
+   {% block custom_js %} 
+      <script type="text/javascript">
+         $(document).ready(function() {
+            $("#credencialTxt").hide();
+            $("label[for='credencialTxt']").hide();
+
+            $("#btnEnviar").on("click",sendData);
+            //$("#responseLbl").text("response text");
+
+            $("#emailSection").hide();
+
+
+            $("#btnSelectDir").on("click", open_container_folder);
+         });
+
+         function sendData() {
+            //const dataForm = new FormData(document.getElementById('formData'));
+            let credentialName;
+            if (document.getElementById('newCredentialCheck').checked)
+               credentialName = $('#credencialTxt').val();
+            else
+               credentialName = $('#credentialSelect').val();
+
+            let spreadLink = $('#spreadLinkTxt').val();
+            let cell1 = $('#celda1Txt').val();
+            let cell2 = $('#celda2Txt').val();
+            let subject = $('#subjectTxt').val();
+            let body = $('#bodyTxt').val();
+            let sendEmail = document.getElementById('sendEmailCheck').checked;
+
+
+            if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && subject != ""){
+               $.ajax({
+                  url:"{{ url_for('generate')}}",
+                  type:"POST",
+                  data: {
+                     credentialName: credentialName,
+                     spreadLink: spreadLink,
+                     cell1: cell1,
+                     cell2: cell2,
+                     subject: subject,
+                     body: body,
+                     faltaMax: $('#faltaMaxima').val(),
+                     templatePath: $("#templateSelect").val(),
+                     sendEmail: sendEmail
+                  },
+                  success: function(response){
+                     $("#responseLbl").text( response.response);
+
+                  },
+                  error: function(error){
+                  console.log(error);
+                  },
+               });
+            }
+
+            
+         }
+
+         function state_nueva_credencial(check) {
+            if (check.checked) {
+               $("#credentialSelect").hide();
+               $("#credencialTxt").show();
+            }else{
+               $("#credencialTxt").hide();
+               $("label[for='credencialTxt']").hide();
+               $("#credentialSelect").show();
+            }
+            
+         }
+
+         function state_enviar_email(check) {
+            if (check.checked) {
+               $("#emailSection").show();
+            }else{
+               $("#emailSection").hide();
+            }
+            
+         }
+
+
+         function open_container_folder(){
+            $.ajax({
+               url:"{{ url_for('openContainerFolder')}}",
+               type:"GET",
+               success: function(response){
+               },
+               error: function(error){
+                  console.log(error);
+               },
+            });
+         }
+        
+      </script>
+   {% endblock %}
+{% endblock %}

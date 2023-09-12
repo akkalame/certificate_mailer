@@ -1,0 +1,98 @@
+
+	<!--<meta name="viewport" content="width=device-width, initial-scale=1">
+    -->
+{% extends 'base.html' %}
+
+{% block head%} 
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename= 'css/reportbro.css') }}">
+	<script src="{{ url_for('static', filename= 'js/reportbro.js') }}"></script>
+	{{ custom_fonts_css }}
+   <style type="text/css">
+        .container{
+            padding-left: 0;
+            margin-left: 0;
+        }
+   </style>
+{% endblock %}
+{% block content %}
+   <div class="row">
+      <div class="col-5">
+         <select class="form-select" aria-label="Default select example" id="templateSelect">
+            <option selected value="">Selecciona una plantilla para cargarla</option>
+            {% for plantilla in plantillas %}
+               <option value="{{ plantilla['path'] }}">{{ plantilla['name'] }}</option>
+            {% endfor %}
+         </select> 
+      </div>
+      
+   </div>
+   <div id="reportbro"></div>
+   {% endblock %}
+   {% block custom_js %} 
+   <script type="text/javascript">
+      const rbDefinitionBlank = {"docElements":[],"parameters":[{"id":1,"name":"page_count","type":"number","arrayItemType":"string","eval":false,"nullable":false,"pattern":"","expression":"","showOnlyNameType":true,"testData":"","testDataBoolean":false,"testDataImage":"","testDataImageFilename":""},{"id":2,"name":"page_number","type":"number","arrayItemType":"string","eval":false,"nullable":false,"pattern":"","expression":"","showOnlyNameType":true,"testData":"","testDataBoolean":false,"testDataImage":"","testDataImageFilename":""}],"styles":[],"version":4,"documentProperties":{"pageFormat":"A4","pageWidth":"","pageHeight":"","unit":"mm","orientation":"portrait","contentHeight":"","marginLeft":"","marginTop":"","marginRight":"","marginBottom":"","header":true,"headerSize":"80","headerDisplay":"always","footer":true,"footerSize":"80","footerDisplay":"always","patternLocale":"en","patternCurrencySymbol":"$","patternNumberGroupSymbol":""}}
+
+      let rb;
+
+      $(document).ready(() => {
+         $("#templateSelect").on("change",(e)=>{
+            let pathTemplate = $("#templateSelect").val();
+            if (pathTemplate != "" && pathTemplate != null){
+               $.ajax({
+                  url:"{{ url_for('load_template')}}",
+                  type:"POST",
+                  data: {
+                     path: pathTemplate
+                  },
+                  success: function(response){
+                     let rbDefinition = response.response;
+                     rb.load(rbDefinition);
+
+                  },
+                  error: function(error){
+                     console.log(error);
+                  },
+               });
+            }else
+               rb.load(rbDefinitionBlank);
+         });
+      });
+
+       
+
+      saveReport = () => {
+         let nameFile = prompt("Nombre de la platilla");
+         let reportDefinition = rb.getReport();
+         let rb64 = btoa(JSON.stringify(reportDefinition));
+            
+         $.ajax({
+            url:"{{ url_for('save_rb_template')}}",
+            type:"POST",
+            data: {
+               reportDefinition: rb64,
+               nameFile: nameFile
+            },
+            success: function(response){
+               alert("Plantilla guardada exitosamente");
+
+            },
+            error: function(error){
+               console.log(error);
+            },
+         });
+      }
+
+      rb = new ReportBro(document.getElementById('reportbro'), {
+         //remove reportServerUrl if you want to use the default report server for a quick start
+         //reportServerUrl: 'http://localhost:5000/designer',
+         menuShowDebug: true,
+         //adminMode: true,
+         //showGrid: false,
+         //enableSpreadsheet: true,
+         saveCallback: saveReport,
+         additionalFonts: {{json_cf|safe}} //[ { name: 'Tangerine', value: 'tangerine'} ]
+      });
+      //rb.load(report);
+   </script>
+{% endblock %}
