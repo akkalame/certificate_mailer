@@ -1,74 +1,93 @@
 {% extends 'base.html' %}
-{% block title %} Certificate Mailer {% endblock %}
+{% block title %} Emissor de Certificados {% endblock %}
 
 {% block content %}
    <div class="form-check form-switch">
       <input class="form-check-input" type="checkbox" role="switch" id="newCredentialCheck" onchange="state_nueva_credencial(this)">
-      <label class="form-check-label" for="newCredentialCheck">Nueva credencial</label>
+      <label class="form-check-label" for="newCredentialCheck">Nova credencial no google</label>
    </div>
 
    <form id="formData" >
-      <div class="mb-3 col-5" >
+      <div class="mb-3 col-7" >
          <select class="form-select" aria-label="Default select example" id="credentialSelect">
-           <option selected>Selecciona una credencial</option>
+           <option selected value="">Selecione uma credencial no google</option>
            {% for credencial in credenciales %}
-              <option value="{{ credencial['path'] }}">{{ credencial['name'] }}</option>
+              <option value="{{ credencial['name'] }}">{{ credencial['name'] }}</option>
            {% endfor %}
          </select>
       
          <label for="credencialTxt" class="form-label"></label>
-         <input type="text" class="form-control" id="credencialTxt" aria-describedby="credentialHelp" placeholder="Nombre de la credencial">
+         <input type="text" class="form-control" id="credencialTxt" aria-describedby="credentialHelp" placeholder="Nome da credencial no google">
       </div>
 
      <div class="mb-3" id="spreadLinkSection">
-         <label for="spreadLinkTxt" class="form-label">Enlace de la hoja de Google</label>
-         <input type="text" class="form-control" id="spreadLinkTxt" aria-describedby="spreadLinkHelp">
+         <div class="col-7">
+            <label for="spreadLinkTxt" class="form-label">Link da planilha no Google Sheet</label>
+            <input type="text" class="form-control" id="spreadLinkTxt" aria-describedby="spreadLinkHelp">
+         </div>
      </div>
 
      <div class="mb-3 row" id="spreadRangeSection">
          <div class="col-2">
-            <label for="celda1Txt" class="form-label">Celda Inicial</label>
-            <input type="text" class="form-control" id="celda1Txt" aria-describedby="spreadCellHelp">
+            <label for="celda1Txt" class="form-label">Célula Inicial</label>
+            <input type="text" class="form-control" id="celda1Txt" aria-describedby="spreadCellHelp" placeholder="A1">
          </div>
          <div class="col-2">
-            <label for="celda2Txt" class="form-label">Celda Final</label>
-            <input type="text" class="form-control" id="celda2Txt" aria-describedby="spreadCellHelp">
+            <label for="celda2Txt" class="form-label">Célula Final</label>
+            <input type="text" class="form-control" id="celda2Txt" aria-describedby="spreadCellHelp" placeholder="C4">
          </div>
      </div>
 
      <div class="mb-3 row">
          <div class="col-2">
-            <label for="faltaMaxima" class="form-label">Falta Maxima</label>
-            <input type="text" class="form-control" id="faltaMaxima" aria-describedby="spreadCellHelp">
+            <label for="faltaMaxima" class="form-label">Falta Máxima</label>
+            <input type="number" min="0" value="0" class="form-control" id="faltaMaxima" aria-describedby="spreadCellHelp">
          </div>
          <div class="col-5">
-            <label for="templateSelect" class="form-label">Plantilla</label>
+            <label for="templateSelect" class="form-label">Modelo</label>
             <select class="form-select" aria-label="Default select example" id="templateSelect">
-              <option selected>Selecciona una plantilla</option>
+              <option selected>Selecione um modelo</option>
               {% for plantilla in plantillas %}
                  <option value="{{ plantilla['path'] }}">{{ plantilla['name'] }}</option>
               {% endfor %}
             </select>
         </div>
-     </div>
+      </div>
 
       <div class="mb-3 form-check form-switch">
          <input class="form-check-input" type="checkbox" role="switch" id="sendEmailCheck" onchange="state_enviar_email(this)">
-         <label class="form-check-label" for="sendEmailCheck">Enviar certificados por correo</label>
+         <label class="form-check-label" for="sendEmailCheck">Enviar certificados por e-mail</label>
       </div>
-     <div class="mb-3" id="emailSection">
-         <label for="subjectTxt" class="form-label">Asunto del Correo</label>
-         <input type="text" class="form-control" id="subjectTxt" aria-describedby="spreadCellHelp">
+      <div class="mb-3" id="emailSection">
+         <div class="form-check col-7">
+            <input class="form-check-input" type="checkbox" value="" id="sendViaGoogleCheck">
+            <label class="form-check-label" for="sendViaGoogleCheck">
+               Enviar através do Google
+            </label>
+         </div>
+         <div class="col-7" id="emailAccountSection">
+            <label for="emailAccountSelect" class="form-label">Selecione uma conta SMTP</label>
+            <select class="form-select" aria-label="SMTP Email Account" id="emailAccountSelect" onchange="setEmailAccountData()">
+               {% for ea in emailAccounts %}
+                  <option value="{{ ea['email'] }}">{{ ea['email'] }}</option>
+               {% endfor %}
+            </select>
+         </div>
+         <div class="col-7">
+            <label for="subjectTxt" class="form-label">Assunto do E-mail</label>
+            <input type="text" class="form-control" id="subjectTxt" aria-describedby="spreadCellHelp">
 
-         <label for="bodyTxt" class="form-label bg">Mensaje</label>
-         <textarea class="form-control" aria-label="Body Message" id="bodyTxt" ></textarea>
+            <label for="bodyTxt" class="form-label bg">Mensagem</label>
+            <textarea class="form-control" aria-label="Body Message" id="bodyTxt" ></textarea>
+         </div>
      </div>
      
    </form>
+
    <div class="mb-3" >
-      <button class="btn btn-primary" type="button" id="btnEnviar">Generar Certificados</button>
+      <button class="btn btn-primary" type="button" id="btnEnviar">Gerar Certificados</button>
      
-      <button class="btn btn-link" id="btnSelectDir">Abrir ubicacion de certificados</button>    
+      <button class="btn btn-link" id="btnSelectDir">Abrir localização dos certificados</button>    
    </div>
    
    <div id="responseLbl" style="text-align: center;"></label>
@@ -78,14 +97,20 @@
          $(document).ready(function() {
             $("#credencialTxt").hide();
             $("label[for='credencialTxt']").hide();
-
             $("#btnEnviar").on("click",sendData);
-            //$("#responseLbl").text("response text");
-
             $("#emailSection").hide();
-
-
             $("#btnSelectDir").on("click", open_container_folder);
+            $("#sendViaGoogleCheck").on("change", toggleEmailAccount);
+
+            let develop = false;
+            if (develop){
+               let spreadLinkTxt = $("#spreadLinkTxt");
+               spreadLinkTxt.val("https://docs.google.com/spreadsheets/d/1s7M9GnHU2nK5fNvGcWkS_G2Z_4imIXxhvrdnZdHtMrM/edit#gid=186001220");
+               let cell1 = $('#celda1Txt').val("A4");
+               let cell2 = $('#celda2Txt').val("L6");
+               let subject = $('#subjectTxt').val("Mensaje");
+               let body = $('#bodyTxt').val("Correo");
+            }
          });
 
          function sendData() {
@@ -101,8 +126,9 @@
             let cell2 = $('#celda2Txt').val();
             let subject = $('#subjectTxt').val();
             let body = $('#bodyTxt').val();
-            let sendEmail = document.getElementById('sendEmailCheck').checked;
-
+            let sendEmail = document.getElementById('sendEmailCheck').checked ? 1:0;
+            let sendViaGoogle = document.getElementById('sendViaGoogleCheck').checked ? 1:0;
+            let emailAccount = $("#emailAccountSelect").val();
 
             if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && subject != ""){
                $.ajax({
@@ -117,7 +143,9 @@
                      body: body,
                      faltaMax: $('#faltaMaxima').val(),
                      templatePath: $("#templateSelect").val(),
-                     sendEmail: sendEmail
+                     sendEmail: sendEmail,
+                     sendViaGoogle: sendViaGoogle,
+                     emailAccount: emailAccount
                   },
                   success: function(response){
                      $("#responseLbl").text( response.response);
@@ -153,6 +181,12 @@
             
          }
 
+         function toggleEmailAccount(){
+            if (document.getElementById('sendViaGoogleCheck').checked)
+               $("#emailAccountSection").hide();
+            else
+               $("#emailAccountSection").show();
+         }
 
          function open_container_folder(){
             $.ajax({

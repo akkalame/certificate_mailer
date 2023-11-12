@@ -1,4 +1,7 @@
-html, body {
-	margin: 0;
-	padding: 0;
+.container {
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5rem; /* ajusta según sea necesario */
+    margin-bottom: 5rem; /* ajusta según sea necesario */
 }

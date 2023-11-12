@@ -1,4 +1,6 @@
 import base64
+import smtplib
+import yagmail
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -9,29 +11,30 @@ import mimetypes
 import os
 
 
-def create_message_with_attachment(sender,to,subject,body,attachments=[]):
+def create_message_with_attachment(to,subject, sender=None,body="",attachments=[], get_raw=True):
     message = MIMEMultipart()
-    message['to'] = to
-    #message['from'] = sender
-    message['subject'] = subject
-    message["Importance"] = "high"
+    message['To'] = to
+    if sender:
+        message['From'] = sender
+    message['Subject'] = subject
+    #message["Importance"] = "high"
 
     message.attach(MIMEText(body, 'html'))
-    #print(message.as_string())
     for attach in attachments:
         message.attach(attach)
-    #print(message.as_string())
-    raw_message = base64.urlsafe_b64encode(message.as_string().encode('utf-8'))
-    return {'raw': raw_message.decode('utf-8')}
+
+    if get_raw:
+        raw_message = base64.urlsafe_b64encode(message.as_string().encode('utf-8'))
+        return {'raw': raw_message.decode('utf-8')}
+    else:
+        message.as_string()
 
 def get_attachment(filePath):
     (content_type, encoding) = mimetypes.guess_type(filePath)
-    #print((content_type, encoding))
     if content_type is None or encoding is not None:
         content_type = 'application/octet-stream'
 
     (main_type, sub_type) = content_type.split('/', 1)
-    #print((main_type, sub_type))
     if main_type == 'text':
         with open(filePath, 'rb') as f:
             attachmentFile = MIMEText(f.read().decode('utf-8'), _subtype=sub_type)
@@ -50,22 +53,41 @@ def get_attachment(filePath):
             attachmentFile.set_payload(f.read())
 
             encoders.encode_base64(attachmentFile)
-            #print(attachmentFile)
 
     filename = os.path.basename(filePath)
-    #print(filename)
     attachmentFile.add_header('Content-Disposition', 'attachment',filename=filename)
     return attachmentFile
 
-def send_gmail(service, sender,to,subject,body,filePath=[]):
+def send_gmail(service, sender,to,subject,body,attachments=[]):
     attachments = []
-    for path in filePath:
+    for path in attachments:
         attachments.append(get_attachment(path))
    
-    msg = create_message_with_attachment(sender,to, subject,body,attachments)
+    msg = create_message_with_attachment(to=to, subject=subject, body=body,attachments=attachments)
     return service.users().messages().send(userId='me',body=msg).execute()
 
-    #print('Message Id: {}'.format(message['id']))
+def send_smtp(service, sender_email, to, subject, body, attachments=[]):
+    #attachments = []
+    # Adjuntar archivos
+    #for attachment_path in attachments:
+    #    attachment = get_attachment(attachment_path)
 
+    #msg = create_message_with_attachment(to=to, subject=subject, body=body,attachments=attachments)
+    # Enviar correo electrónico
+    r = service.send(to=to, subject=subject, contents=body, attachments=attachments)
+
+def smtp_service(sender_email, sender_password, smtp_server, smtp_port, use_tls=True):
+    # Iniciar conexión SMTP
+    try:
+        service = yagmail.SMTP(sender_email, sender_password, smtp_server, int(smtp_port))
+        # Establecer conexión segura si se especifica TLS
+        #if use_tls:
+        #    server.starttls()
+        # Iniciar sesión en el servidor SMTP
+        #service = server.login(sender_email, sender_password)
+        return service
+    except Exception as e:
+        raise e
+    
 
 

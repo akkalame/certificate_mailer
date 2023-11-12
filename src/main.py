@@ -1,8 +1,13 @@
 from types import SimpleNamespace
 from reportbro import Report, ReportBroError
 
-from controller.email_controller import send_gmail
+from kernel import _dict
+from controller.email_controller import send_gmail, send_smtp, smtp_service
 from controller.oauth_login import Service
+
+from model.DataBase import DataBase
+from controller.database.DBTable import TabMailServer, TabEmailAccount
+
 from utils import _, today, mkdir
 import utils, json, glob, os, random, base64
 
@@ -23,16 +28,13 @@ class Main():
 	def get_sheet_values(self, sheetId, rangeName):
 		sheet = self.service.sheets().spreadsheets()
 		result = sheet.values().get(
-            spreadsheetId=sheetId, range=rangeName).execute()
+			spreadsheetId=sheetId, range=rangeName).execute()
 		return result.get('values', [])
 
 	def rows_to_obj(self, rows,rowSpan=1):
 		data = []
 		for idx, row in enumerate(rows):
-			#if len(row) >= 12:
-			#	if row[11] == "CE": continue
-
-			obj = SimpleNamespace()
+			obj = _dict()
 			obj.email = row[0]
 			obj.name = row[1]
 			obj.faltas = 0
@@ -45,6 +47,7 @@ class Main():
 		return data
 
 	def availables_to_certificate(self, data, faltaMax=0):
+		if type(faltaMax) == str: faltaMax = int(faltaMax)
 		r = []
 		for d in data:
 			if d.faltas >= faltaMax and faltaMax > 0:
@@ -59,15 +62,14 @@ class Main():
 		additionalFonts = get_additional_fonts()
 		#data = [{"name":"Isabela oliveira", "email":"devakkalame@gmail.com"}, {"name":"Pedro Oliveira","email":""}]
 		for d in self.toCertificate:
-			reportData = vars(d)
-			reportData["name"] = reportData["name"].lower().title()
-			report = Report(report_definition=reportDefinition, data=reportData, 
+			d.name = d.name.lower().title()
+			report = Report(report_definition=reportDefinition, data=d, 
 				additional_fonts=additionalFonts)
 			report_file = report.generate_pdf()
 
-			namePdf = d.email if d.email != "" else generate_file_name(d.name)
+			namePdf = d.email.replace(".", "_") if d.email != "" else generate_file_name(d.name)
 			if not pathToSave:
-				pathToSave = './pdf/'+today+'/'
+				pathToSave = './pdf/'+today()+'/'
 				mkdir(pathToSave)
 			filePath = pathToSave+namePdf+'.pdf'
 
@@ -79,27 +81,58 @@ class Main():
 				dCopy.file = filePath
 				self.toSend.append(dCopy)
 
-	def send_emails(self, subject, body):
-		gmail = self.service.gmail()
-		for d in self.toSend:
-			send_gmail(gmail, '',d.email,subject,body,filePath=[d.file])
-		
-		return f"{len(self.toSend)} emails enviados"
+	def send_emails(self, subject, body, emailAccount="", sendViaGoogle=0):
+		if sendViaGoogle:
+			service = self.service.gmail()
+			method = send_gmail
+		else:
+			service = self.get_smtp_service(emailAccount)
+			method = send_smtp
 
-def make_process(tokenName,spreadLink,cell1,cell2,faltaMax,subject,body, templatePath, sendEmail):
+		for d in self.toSend:
+			method(service, '',d.email,subject,body,attachments=[d.file])
+
+		
+		return f"{len(self.toSend)} e-mails enviados"
+
+	def get_smtp_service(self, emailAccount):
+		db = DataBase(get_db_path())
+		mailAccount = TabEmailAccount(db)
+		
+		query = mailAccount._Listar(filters={"email": emailAccount})
+		if query:
+			ea = query[0]
+			mailServer = TabMailServer(db)
+			query2 = mailServer._Listar(filters={"server": ea.server})
+			if query2:
+				server = query2[0]
+				useremail = make_addr_email(ea.email, ea.name)
+				service = smtp_service(useremail, ea.password, ea.server, server.port, server.use_tls)
+				
+				return service
+
+def make_addr_email(email, name=""):
+	if not name or name == "":
+		name = email.split("@")[0]
+	r = _dict()
+	r[email] = f"{name}"# <{email}>"
+	return r
+
+
+
+def make_process(data):
 	main = Main()
-	main.connect_to_google(tokenName)
-	sheetId = utils.sheet_id_from_link(spreadLink)
-	rangeName = f"{cell1.upper()}:{cell2.upper()}"
+	main.connect_to_google(data.credentialName)
+	sheetId = utils.sheet_id_from_link(data.spreadLink)
+	rangeName = f"{data.cell1.upper()}:{data.cell2.upper()}"
 	rows = main.get_sheet_values(sheetId, rangeName)
 
+	rows = main.rows_to_obj(rows, int(data.cell1[1:]))
+	main.availables_to_certificate(rows, data.faltaMax)
+	main.generate_cert(data.templatePath)
 
-
-	data = main.rows_to_obj(rows, int(cell1[1:]))
-	main.availables_to_certificate(data, faltaMax)
-	main.generate_cert(templatePath)
-	if sendEmail:
-		return main.send_emails(subject, body)
+	if int(data.sendEmail):
+		return main.send_emails(data.subject, data.body, data.emailAccount, int(data.sendViaGoogle))
 
 	return f"{len(main.toCertificate)} certificados generados"
 
@@ -139,7 +172,7 @@ def get_tokens():
 	r = []
 	for f in paths:
 		name = os.path.basename(f).split(".")[0]
-		r.append(dict(path=f, name=name))
+		r.append(_dict(name=name))
 	return r
 
 def get_rb_templates():
@@ -153,7 +186,6 @@ def get_rb_templates():
 def load_rb_template(path):
 	with open(path, "r") as f:
 		d = f.read()
-		#print(d)
 		return json.loads(d)
 
 def load_custom_fonts():
@@ -165,8 +197,8 @@ def load_custom_fonts():
 		fontName = font['value'].replace('_',' ').replace('-',' ').lower().capitalize()
 		fontUrl = url_for('static', filename= 'fonts/custom_fonts/{0}'.format(os.path.basename(font['filename'])))
 		contentFile += """\n@font-face {{
-		    font-family: "{0}";
-		    src: url("{1}");
+			font-family: "{0}";
+			src: url("{1}");
 		}}""".format(font['value'], fontUrl)
 
 		jsonContent.append({'name': fontName, 'value':font['value']})
@@ -176,18 +208,105 @@ def load_custom_fonts():
 	#	f.write(contentFile)
 	return {'css':contentFile, 'json': json.dumps(jsonContent)}
 
+def get_mail_servers():
+	db = DataBase(get_db_path())
+	mailServer = TabMailServer(db)
+	
+	query = mailServer._Listar(db)
+	result = []
+	for q in query:
+		result.append(
+			{
+				"data": f"{q.server}:{q.port}:{q.use_tls}",
+				"server_name": q.server
+			}
+		)
+	return result
+
+def get_email_accounts():
+	db = DataBase(get_db_path())
+	mailAccount = TabEmailAccount(db)
+	
+	query = mailAccount._Listar(db)
+	result = []
+	for q in query:
+		raw_account = q.email.split("@")[0]
+		result.append(
+			{
+				"data": f"{raw_account}:{q.server}:{q.password}:{q.name or ''}",
+				"email": q.email
+			}
+		)
+	return result
+
+
+def get_db_path():
+	config = get_config()
+	dbPath = f"db/{config.db_name}"
+	return dbPath
+
+def get_config():
+
+	config = None
+	with open("config.json", "r", encoding="utf-8") as f:
+		data_json = json.loads(f.read())
+	try:
+		config = _dict(data_json)
+	except Exception as e:
+		pass
+	return _dict() if not config else config
+
+def update_settings(data):
+	type_con = data.type
+	del data.type
+
+	db = DataBase(get_db_path())
+	response = ""
+	if type_con == "EmailServer":
+		mailServer = TabMailServer(db)
+		server = {"server": data.server}
+		existe = mailServer._Exists(db, server)
+		if existe:
+			response = mailServer._Actualizar(db, data, server)
+		else:
+			response = mailServer._Crear(db, data)
+
+	elif type_con == "EmailAccount":
+		emailAccount = TabEmailAccount(db)
+		filters = {"email": data.email}
+		existe = emailAccount._Exists(db, filters)
+		if existe:
+			response = emailAccount._Actualizar(db, data, filters)
+		else:
+			response = emailAccount._Crear(db, data)
+
+	return response
+
+def delete_settings(data):
+	type_con = data.type
+	del data.type
+
+	db = DataBase(get_db_path())
+	response = ""
+	if type_con == "EmailServer":
+		mailServer = TabMailServer(db)
+		existe = mailServer._Exists(db, data)
+		if existe:
+			response = mailServer._Eliminar(db, data)
+
+	elif type_con == "EmailAccount":
+		emailAccount = TabEmailAccount(db)
+		existe = emailAccount._Exists(db, data)
+		if existe:
+			response = emailAccount._Eliminar(db, data)
+
+	return response
+
+
+
+
+
 if __name__ == "__main__":
 	pass
-	#main = Main()
-	#main.connect_to_google()
-	#sheetId = utils.sheet_id_from_link("https://docs.google.com/spreadsheets/d/1s7M9GnHU2nK5fNvGcWkS_G2Z_4imIXxhvrdnZdHtMrM/edit#gid=186001220")
-	#rangeName = utils.format_sheet_range_name('A', 4, 'M', 5)
-	#rows = main.get_sheet_values(sheetId, rangeName)
-	#data = main.rows_to_obj(rows, 4)
-	#main.availables_to_certificate(data, 1)
-	#main.generate_cert()
-	#main.send_emails()
-	#get_additional_fonts()
-	#print('\n',filteredData)
 
 
