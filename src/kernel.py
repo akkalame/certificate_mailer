@@ -1,3 +1,6 @@
+from model.translator import translate
+import json
+
 class _dict(dict):
     """dict like object that exposes keys as attributes"""
 
@@ -18,3 +21,17 @@ class _dict(dict):
 
     def copy(self):
         return _dict(self)
+
+def _(text, lang="es-VE"):
+    return translate(text, lang)
+
+def get_config():
+
+    config = None
+    with open("config.json", "r", encoding="utf-8") as f:
+        data_json = json.loads(f.read())
+    try:
+        config = _dict(data_json)
+    except Exception as e:
+        pass
+    return _dict() if not config else config

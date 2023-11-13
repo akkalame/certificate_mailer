@@ -115,6 +115,13 @@ class TabEmailAccount(DBTable):
 	def __init__(self, db):
 		super().__init__(db, "email_account")
 
+class TabLanguage(DBTable):
+	def __init__(self, db):
+		super().__init__(db, "language")
+
+class TabPreference(DBTable):
+	def __init__(self, db):
+		super().__init__(db, "preference")
 
 def get_filters_str(filters):
 	cond = ""

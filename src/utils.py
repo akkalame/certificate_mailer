@@ -1,17 +1,10 @@
-from model.translator import translate
+
 from datetime import datetime
 import os, platform
 from pathlib import Path
 import socket
 import webbrowser
 import subprocess
-
-def _(text):
-	lang = 'es_VE'
-	return translate(text, lang)
-
-def get_config():
-	pass
 
 def sheet_id_from_link(link):
 	return link.replace("https://docs.google.com/spreadsheets/d/", "").split("/")[0]

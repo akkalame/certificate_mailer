@@ -1,18 +1,23 @@
 from types import SimpleNamespace
 from reportbro import Report, ReportBroError
 
-from kernel import _dict
+from kernel import _dict, get_config, _
 from controller.email_controller import send_gmail, send_smtp, smtp_service
 from controller.oauth_login import Service
 
 from model.DataBase import DataBase
-from controller.database.DBTable import TabMailServer, TabEmailAccount
+from controller.database.DBTable import (
+	TabMailServer, 
+	TabEmailAccount, 
+	TabLanguage,
+	TabPreference
+	)
 
-from utils import _, today, mkdir
+from utils import today, mkdir
 import utils, json, glob, os, random, base64
 
 from flask import url_for
-
+from urllib.parse import unquote
 
 class Main():
 	def __init__(self):
@@ -119,7 +124,6 @@ def make_addr_email(email, name=""):
 	return r
 
 
-
 def make_process(data):
 	main = Main()
 	main.connect_to_google(data.credentialName)
@@ -137,12 +141,15 @@ def make_process(data):
 	return f"{len(main.toCertificate)} certificados generados"
 
 def save_template(str64, nameFile=""):
+	#nameFile = nameFile.replace("./cert_template/", "")
 	if nameFile == "":
 		nameFile = generate_code(10)
 
-	strRB = base64.b64decode(str64)
-	with open("./cert_template/"+nameFile+".json", "w") as f:
-		f.write(strRB.decode("utf-8"))
+
+	strRB = base64.b64decode(str64).decode("utf-8")
+	decode_str = unquote(strRB)
+	with open("./cert_template/"+nameFile+".json", "w", encoding="utf-8") as f:
+		f.write(decode_str)
 
 def generate_file_name(txt=""):
 	txt = txt.lower().replace(" ", "_")
@@ -179,13 +186,15 @@ def get_rb_templates():
 	paths = glob.glob(f'./cert_template/*.json')
 	r = []
 	for f in paths:
-		name = os.path.basename(f).split(".")[0]
-		r.append(dict(path=f, name=name))
+		basename = os.path.basename(f)
+		name = basename.split(".")[0]
+		r.append(_dict(name=name))
 	return r
 
-def load_rb_template(path):
-	with open(path, "r") as f:
+def load_rb_template(filename):
+	with open("./cert_template/"+filename+".json", "r", encoding="utf-8") as f:
 		d = f.read()
+		print(d)
 		return json.loads(d)
 
 def load_custom_fonts():
@@ -245,16 +254,6 @@ def get_db_path():
 	dbPath = f"db/{config.db_name}"
 	return dbPath
 
-def get_config():
-
-	config = None
-	with open("config.json", "r", encoding="utf-8") as f:
-		data_json = json.loads(f.read())
-	try:
-		config = _dict(data_json)
-	except Exception as e:
-		pass
-	return _dict() if not config else config
 
 def update_settings(data):
 	type_con = data.type
@@ -303,8 +302,22 @@ def delete_settings(data):
 	return response
 
 
+def get_languages():
+	db = DataBase(get_db_path())
+	language = TabLanguage(db)
+	langs = language._Listar()
+	current = get_preference().lang
+	return _dict(langs=langs, current=current)
 
+def get_preference():
+	db = DataBase(get_db_path())
+	preference = TabPreference(db)
+	preferencias = preference._Listar()
 
+	r = _dict()
+	for pr in preferencias:
+		r[pr.key] = pr.value
+	return r
 
 if __name__ == "__main__":
 	pass

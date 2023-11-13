@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% block title %} Certificate Mailer {% endblock %}
 
 {% block content %}
@@ -103,10 +104,39 @@
 		</div>
 		<!-- fin Sección 2 -->
 
+		<!-- Sección 3 -->
+		<div class="card">
+			<div class="card-header" id="headingThree">
+				<h5 class="mb-0">
+					<button class="btn" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
+						Idioma
+					</button>
+				</h5>
+			</div>
+
+			<div id="collapseThree" class="collapse show" aria-labelledby="headingThree" data-parent="#accordion">
+				<div class="card-body">
+					<select class="form-select" aria-label="Default select example" id="emailAccountSelect" onchange="setEmailAccountData()">
+						{% for lang in languages['langs'] %}
+							{% if languages['current'] == lang['symbol']%}
+								<option value="{{ lang['symbol'] }}" selected>{{ lang['name'] }}</option>
+							{% else %}
+								<option value="{{ lang['symbol'] }}">{{ lang['name'] }}</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+
+				</div>
+
+			</div>
+		</div>
+		<!-- fin Sección 3 -->
 	</div>
 	<label id="responseLbl" style="text-align: center;"></label>
 	
 	{% block custom_js %}
+		
+
 		<script type="text/javascript">
 			$(document).ready(function() {
 				$("#saveEmailServerBtn").on("click",saveEmailServer);

@@ -21,7 +21,7 @@
          <select class="form-select" aria-label="Default select example" id="templateSelect">
             <option selected value="">Selecciona una plantilla para cargarla</option>
             {% for plantilla in plantillas %}
-               <option value="{{ plantilla['path'] }}">{{ plantilla['name'] }}</option>
+               <option value="{{ plantilla['name'] }}">{{ plantilla['name'] }}</option>
             {% endfor %}
          </select> 
       </div>
@@ -38,6 +38,7 @@
       $(document).ready(() => {
          $("#templateSelect").on("change",(e)=>{
             let pathTemplate = $("#templateSelect").val();
+            console.log(pathTemplate);
             if (pathTemplate != "" && pathTemplate != null){
                $.ajax({
                   url:"{{ url_for('load_template')}}",
@@ -62,25 +63,35 @@
        
 
       saveReport = () => {
-         let nameFile = prompt("Nombre de la platilla");
+         let templateSelectInput = $("#templateSelect");
+         let nameFile = templateSelectInput.val() == "" ? prompt("Nombre de la platilla") : templateSelectInput.val();
          let reportDefinition = rb.getReport();
-         let rb64 = btoa(JSON.stringify(reportDefinition));
-            
-         $.ajax({
-            url:"{{ url_for('save_rb_template')}}",
-            type:"POST",
-            data: {
-               reportDefinition: rb64,
-               nameFile: nameFile
-            },
-            success: function(response){
-               alert("Plantilla guardada exitosamente");
+         let rb64;
+         try {
+             let reportJson = JSON.stringify(reportDefinition);
+             let encodedJson = encodeURIComponent(reportJson);
+             rb64 = btoa(encodedJson);
+             // Hacer algo con rb64...
+         } catch (error) {
+             console.error('Error al convertir el objeto a JSON o al codificar la URL:', error);
+         }
+            $.ajax({
+               url:"{{ url_for('save_rb_template')}}",
+               type:"POST",
+               data: {
+                  reportDefinition: rb64,
+                  nameFile: nameFile
+               },
+               success: function(response){
+                  alert("Plantilla guardada exitosamente");
 
-            },
-            error: function(error){
-               console.log(error);
-            },
-         });
+               },
+               error: function(error){
+                  console.log(error);
+               },
+            });
+        
+         
       }
 
       rb = new ReportBro(document.getElementById('reportbro'), {

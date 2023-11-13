@@ -5,3 +5,10 @@
     margin-top: 5rem; /* ajusta según sea necesario */
     margin-bottom: 5rem; /* ajusta según sea necesario */
 }
+
+.file-manager {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+        }
