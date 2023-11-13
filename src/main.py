@@ -61,8 +61,10 @@ class Main():
 		self.toCertificate = r
 
 	def generate_cert(self, templatePath, pathToSave=None):
-		with open(templatePath, 'r') as f:
-			reportDefinition = json.loads(f.read())
+		with open("./cert_template/"+templatePath+".json", 'r', encoding="utf-8") as f:
+			content = f.read()
+			print(type(content))
+			reportDefinition = json.loads(content)
 
 		additionalFonts = get_additional_fonts()
 		#data = [{"name":"Isabela oliveira", "email":"devakkalame@gmail.com"}, {"name":"Pedro Oliveira","email":""}]

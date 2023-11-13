@@ -48,7 +48,7 @@
             <select class="form-select" aria-label="Default select example" id="templateSelect">
               <option selected>Selecione um modelo</option>
               {% for plantilla in plantillas %}
-                 <option value="{{ plantilla['path'] }}">{{ plantilla['name'] }}</option>
+                 <option value="{{ plantilla['name'] }}">{{ plantilla['name'] }}</option>
               {% endfor %}
             </select>
         </div>
