@@ -109,14 +109,14 @@
 			<div class="card-header" id="headingThree">
 				<h5 class="mb-0">
 					<button class="btn" data-toggle="collapse" data-target="#collapseThree" aria-expanded="true" aria-controls="collapseThree">
-						Idioma
+						Geral
 					</button>
 				</h5>
 			</div>
 
 			<div id="collapseThree" class="collapse show" aria-labelledby="headingThree" data-parent="#accordion">
 				<div class="card-body">
-					<select class="form-select" aria-label="Default select example" id="emailAccountSelect" onchange="setEmailAccountData()">
+					<select class="form-select" aria-label="Default select example" id="emailAccountSelect" onchange="">
 						{% for lang in languages['langs'] %}
 							{% if languages['current'] == lang['symbol']%}
 								<option value="{{ lang['symbol'] }}" selected>{{ lang['name'] }}</option>
@@ -125,6 +125,17 @@
 							{% endif %}
 						{% endfor %}
 					</select>
+
+					<!--<select class="form-select" aria-label="Default select example" id="generatorSelec" onchange="setGenerator()">
+						{% for gen in generator['generators'] %}
+							{% if generator['current'] == gen['value']%}
+								<option value="{{ geb['value'] }}" selected>{{ gen['name'] }}</option>
+							{% else %}
+								<option value="{{ lang['value'] }}">{{ gen['name'] }}</option>
+							{% endif %}
+						{% endfor %}
+						
+					</select>-->
 
 				</div>
 
@@ -206,6 +217,26 @@
 					$("#deleteEmailAccountBtn").show();
 			}
 
+			function setGenerator(){
+				// Obtener el elemento select y los campos del formulario
+				let select = document.getElementById('generatorSelec');
+
+				// Obtener el valor seleccionado en el select
+				let selectedValue = select.value;
+
+				for (var i = 0; i < emailServerSelect.options.length; i++) {
+				   if (emailServerSelect.options[i].value == valores[1]) {
+				      emailServerSelect.options[i].selected = true;
+				      break;
+				   }
+				}
+
+
+				if (selectedValue == "")
+					$("#deleteEmailAccountBtn").hide();
+				else
+					$("#deleteEmailAccountBtn").show();
+			}
 
 			function saveEmailServer(){
 				let serverNameInput = document.getElementById('server_name');

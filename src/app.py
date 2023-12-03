@@ -5,7 +5,7 @@ from kernel import _dict, get_config, _
 from main import (
 	make_process, 
 	save_template, 
-	get_rb_templates, 
+	get_cert_templates, 
 	load_rb_template, 
 	load_custom_fonts,
 	get_tokens,
@@ -27,7 +27,7 @@ app.jinja_env.globals.update(load_custom_fonts=load_custom_fonts)
 @app.route('/')
 def index():
 	return render_template('index.html', credenciales=get_tokens(), 
-		plantillas=get_rb_templates(),
+		plantillas=get_cert_templates(),
 		emailAccounts=get_email_accounts())
 
 

@@ -15,12 +15,17 @@ from controller.database.DBTable import (
 
 from utils import today, mkdir
 import utils, json, glob, os, random, base64
-
+from pathlib import Path
 from flask import url_for
 from urllib.parse import unquote
+from docxtpl import DocxTemplate
+from docx2pdf import convert
+import pythoncom
+
 
 class Main():
 	def __init__(self):
+		pythoncom.CoInitialize()
 		self.service = None
 		self.toCertificate = []
 		self.toSend = []
@@ -61,11 +66,47 @@ class Main():
 		self.toCertificate = r
 
 	def generate_cert(self, templatePath, pathToSave=None):
-		with open("./cert_template/"+templatePath+".json", 'r', encoding="utf-8") as f:
-			content = f.read()
-			print(type(content))
-			reportDefinition = json.loads(content)
+		tp = "./cert_template/"+templatePath
+		if Path(tp+".docx").exists():
+			tp = tp + ".docx"
+		else:
+			return 
 
+		pathToSave = validate_path_to_save(pathToSave)
+
+		self.gen_by_docx(tp, pathToSave)
+
+	def gen_by_docx(self, tp, pathToSave=None):
+		
+		for idx, d in enumerate(self.toCertificate):
+			print(idx)
+			print("Geração de certificado ",idx,"/",len(self.toCertificate))
+			doc = DocxTemplate(tp)
+			d.name = d.name.lower().title()
+			doc.render(d)
+			filename = get_name_pdf(d, pathToSave)
+			filePath = pathToSave+filename
+			
+			doc.save(filePath+".docx")
+			try:
+				convert(filePath+".docx", filePath+".pdf")
+			except Exception as e:
+				pass
+
+			if d.email != "":
+				dCopy = d
+				dCopy.file = filePath+".pdf"
+				self.toSend.append(dCopy)
+
+			#if os.path.exists(filePath+".pdf"):
+			#	os.remove(filePath+".docx")
+		cleanOutputs(pathToSave)
+
+	def gen_by_rb(self, tp, pathToSave=None):
+		with open(tp, 'r', encoding="utf-8") as f:
+			content = f.read()
+			reportDefinition = json.loads(content)
+			
 		additionalFonts = get_additional_fonts()
 		#data = [{"name":"Isabela oliveira", "email":"devakkalame@gmail.com"}, {"name":"Pedro Oliveira","email":""}]
 		for d in self.toCertificate:
@@ -74,10 +115,8 @@ class Main():
 				additional_fonts=additionalFonts)
 			report_file = report.generate_pdf()
 
-			namePdf = d.email.replace(".", "_") if d.email != "" else generate_file_name(d.name)
-			if not pathToSave:
-				pathToSave = './pdf/'+today()+'/'
-				mkdir(pathToSave)
+			namePdf = get_name_pdf(d)
+			
 			filePath = pathToSave+namePdf+'.pdf'
 
 			with open(filePath, 'wb') as f:
@@ -125,6 +164,20 @@ def make_addr_email(email, name=""):
 	r[email] = f"{name}"# <{email}>"
 	return r
 
+def get_name_pdf(d, pathToSave=None):
+	filename = d.email.replace(".", "_") if d.email != "" else generate_file_name(d.name)
+	if pathToSave:
+		while Path(pathToSave+filename+".pdf").exists():
+			nameData = d.email.replace(".", "_") if d.email else d.name
+			filename = generate_file_name(nameData)
+
+	return filename
+
+def validate_path_to_save(pathToSave):
+	if not pathToSave:
+		pathToSave = './pdf/'+today()+'/'
+		mkdir(pathToSave)
+	return pathToSave
 
 def make_process(data):
 	main = Main()
@@ -143,10 +196,8 @@ def make_process(data):
 	return f"{len(main.toCertificate)} certificados generados"
 
 def save_template(str64, nameFile=""):
-	#nameFile = nameFile.replace("./cert_template/", "")
 	if nameFile == "":
 		nameFile = generate_code(10)
-
 
 	strRB = base64.b64decode(str64).decode("utf-8")
 	decode_str = unquote(strRB)
@@ -182,6 +233,19 @@ def get_tokens():
 	for f in paths:
 		name = os.path.basename(f).split(".")[0]
 		r.append(_dict(name=name))
+	return r
+
+def get_cert_templates():
+	return get_docx_templates()
+
+def get_docx_templates():
+	r = []
+	for ext in (".docx", ".doc"):
+		paths = glob.glob(f'./cert_template/*{ext}')
+		for f in paths:
+			basename = os.path.basename(f)
+			name = basename.split(".")[0]
+			r.append(_dict(name=name))
 	return r
 
 def get_rb_templates():
@@ -320,6 +384,18 @@ def get_preference():
 	for pr in preferencias:
 		r[pr.key] = pr.value
 	return r
+
+
+def cleanOutputs(path, extension='docx'):
+        files = glob.glob(f'{path}/*.{extension}')
+        for file in files:
+            try:
+                nameFile = file.split('.'+extension)[0]
+                os.remove(file)
+
+            except Exception as e:
+                pass
+
 
 if __name__ == "__main__":
 	pass

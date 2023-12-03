@@ -30,20 +30,20 @@
      <div class="mb-3 row" id="spreadRangeSection">
          <div class="col-2">
             <label for="celda1Txt" class="form-label">Célula Inicial</label>
-            <input type="text" class="form-control" id="celda1Txt" aria-describedby="spreadCellHelp" placeholder="A1">
+            <input type="text" class="form-control" id="celda1Txt" oninput="upperCase(this)" aria-describedby="spreadCellHelp" placeholder="A1">
          </div>
          <div class="col-2">
             <label for="celda2Txt" class="form-label">Célula Final</label>
-            <input type="text" class="form-control" id="celda2Txt" aria-describedby="spreadCellHelp" placeholder="C4">
+            <input type="text" class="form-control" id="celda2Txt" oninput="upperCase(this)" aria-describedby="spreadCellHelp" placeholder="C4">
          </div>
      </div>
 
      <div class="mb-3 row">
-         <div class="col-2">
+         <div class="col-2" style="display: none;">
             <label for="faltaMaxima" class="form-label">Falta Máxima</label>
             <input type="number" min="0" value="0" class="form-control" id="faltaMaxima" aria-describedby="spreadCellHelp">
          </div>
-         <div class="col-5">
+         <div class="col-7">
             <label for="templateSelect" class="form-label">Modelo</label>
             <select class="form-select" aria-label="Default select example" id="templateSelect">
               <option selected>Selecione um modelo</option>
@@ -94,7 +94,7 @@
 
    {% block custom_js %} 
       <script type="text/javascript">
-         $(document).ready(function() {
+         document.addEventListener("DOMContentLoaded", function() {
             $("#credencialTxt").hide();
             $("label[for='credencialTxt']").hide();
             $("#btnEnviar").on("click",sendData);
@@ -130,7 +130,7 @@
             let sendViaGoogle = document.getElementById('sendViaGoogleCheck').checked ? 1:0;
             let emailAccount = $("#emailAccountSelect").val();
 
-            if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && subject != ""){
+            if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && (sendEmail && subject != "" || !sendEmail)){
                $.ajax({
                   url:"{{ url_for('generate')}}",
                   type:"POST",
@@ -198,6 +198,10 @@
                   console.log(error);
                },
             });
+         }
+
+         function upperCase(input) {
+            input.value = input.value.toUpperCase();
          }
         
       </script>

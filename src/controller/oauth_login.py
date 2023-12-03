@@ -5,6 +5,7 @@ from google.oauth2.credentials import Credentials
 # If modifying these scopes, delete the file token.picklefrom 
 import os
 from kernel import _
+from utils import mkdir
 
 class Service():
     def __init__(self):
@@ -29,6 +30,7 @@ class Service():
                 creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
             print("guardando el token en json")
+            mkdir("./tokens/")
             with open(f'./tokens/{tokenFileName}.json', 'w') as token:
                 token.write(creds.to_json())
         self.gCreds = creds
