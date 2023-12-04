@@ -45,8 +45,8 @@ class Main():
 		data = []
 		for idx, row in enumerate(rows):
 			obj = _dict()
-			obj.email = row[0]
-			obj.name = row[1]
+			obj.email = row[0].strip()
+			obj.name = row[1].strip()
 			obj.faltas = 0
 			obj.indexRow = idx+rowSpan
 			try:
@@ -79,28 +79,35 @@ class Main():
 	def gen_by_docx(self, tp, pathToSave=None):
 		
 		for idx, d in enumerate(self.toCertificate):
-			print(idx)
 			print("Geração de certificado ",idx,"/",len(self.toCertificate))
 			doc = DocxTemplate(tp)
 			d.name = d.name.lower().title()
 			doc.render(d)
 			filename = get_name_pdf(d, pathToSave)
 			filePath = pathToSave+filename
-			
-			doc.save(filePath+".docx")
+			doc.save(f"{filePath}.docx")
 			try:
-				convert(filePath+".docx", filePath+".pdf")
+				convert(f"{filePath}.docx", f"{filePath}.pdf")
 			except Exception as e:
 				pass
 
 			if d.email != "":
 				dCopy = d
-				dCopy.file = filePath+".pdf"
+				dCopy.file = f"{filePath}.pdf"
 				self.toSend.append(dCopy)
 
 			#if os.path.exists(filePath+".pdf"):
 			#	os.remove(filePath+".docx")
 		cleanOutputs(pathToSave)
+
+	def set_just_send(self):
+		pathToSave = validate_path_to_save(None)
+		for idx, d in enumerate(self.toCertificate):
+			if d.email != "":
+				dCopy = d
+				filename = d.email.replace(".", "_")
+				dCopy.file = f"{pathToSave}/{filename}.pdf"
+				self.toSend.append(dCopy)
 
 	def gen_by_rb(self, tp, pathToSave=None):
 		with open(tp, 'r', encoding="utf-8") as f:
@@ -135,11 +142,14 @@ class Main():
 			service = self.get_smtp_service(emailAccount)
 			method = send_smtp
 
+		sents = 0
 		for d in self.toSend:
-			method(service, '',d.email,subject,body,attachments=[d.file])
+			if Path(d.file).exists():
+				method(service, '',d.email,subject,body,attachments=[d.file])
+				sents += 1
 
 		
-		return f"{len(self.toSend)} e-mails enviados"
+		return f"{sents} e-mails enviados"
 
 	def get_smtp_service(self, emailAccount):
 		db = DataBase(get_db_path())
@@ -188,7 +198,10 @@ def make_process(data):
 
 	rows = main.rows_to_obj(rows, int(data.cell1[1:]))
 	main.availables_to_certificate(rows, data.faltaMax)
-	main.generate_cert(data.templatePath)
+	if not int(data.justSend):
+		main.generate_cert(data.templatePath)
+	else:
+		main.set_just_send()
 
 	if int(data.sendEmail):
 		return main.send_emails(data.subject, data.body, data.emailAccount, int(data.sendViaGoogle))

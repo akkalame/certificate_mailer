@@ -65,6 +65,12 @@
                Enviar através do Google
             </label>
          </div>
+         <div class="form-check col-7">
+            <input class="form-check-input" type="checkbox" value="" id="justSendCheck">
+            <label class="form-check-label" for="justSendCheck">
+               Solo Enviar
+            </label>
+         </div>
          <div class="col-7" id="emailAccountSection">
             <label for="emailAccountSelect" class="form-label">Selecione uma conta SMTP</label>
             <select class="form-select" aria-label="SMTP Email Account" id="emailAccountSelect" onchange="setEmailAccountData()">
@@ -129,6 +135,7 @@
             let sendEmail = document.getElementById('sendEmailCheck').checked ? 1:0;
             let sendViaGoogle = document.getElementById('sendViaGoogleCheck').checked ? 1:0;
             let emailAccount = $("#emailAccountSelect").val();
+            let justSend = document.getElementById('justSendCheck').checked ? 1:0;
 
             if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && (sendEmail && subject != "" || !sendEmail)){
                $.ajax({
@@ -145,7 +152,8 @@
                      templatePath: $("#templateSelect").val(),
                      sendEmail: sendEmail,
                      sendViaGoogle: sendViaGoogle,
-                     emailAccount: emailAccount
+                     emailAccount: emailAccount,
+                     justSend:justSend
                   },
                   success: function(response){
                      $("#responseLbl").text( response.response);
