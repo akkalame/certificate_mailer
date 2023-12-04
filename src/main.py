@@ -135,6 +135,7 @@ class Main():
 				self.toSend.append(dCopy)
 
 	def send_emails(self, subject, body, emailAccount="", sendViaGoogle=0):
+		print("Envío de correos electrónicos")
 		if sendViaGoogle:
 			service = self.service.gmail()
 			method = send_gmail
@@ -147,6 +148,7 @@ class Main():
 			if Path(d.file).exists():
 				method(service, '',d.email,subject,body,attachments=[d.file])
 				sents += 1
+				print("Enviado para",d.email)
 
 		
 		return f"{sents} e-mails enviados"
