@@ -9,7 +9,10 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/spectrum.min.css')}}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css')}}">
+    <link rel="icon" href="{{ url_for('static', filename='img/email_certificate_ico.jpg')}}" type="image/x-icon">
+    
 
     <!-- custom head -->
 
@@ -29,6 +32,9 @@
                     <a class="nav-link" href="{{ url_for('designer')}}">Designer</a>
                 </li>-->
                 <li class="nav-item active">
+                    <a class="nav-link" href="{{ url_for('editor_email')}}">Editor de e-mail</a>
+                </li>
+                <li class="nav-item active">
                     <a class="nav-link" href="{{ url_for('settings')}}">Configuração</a>
                 </li>
             </ul>
@@ -41,6 +47,7 @@
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/jquery-3.7.0.min.js')}}" ></script>
+    <script src=" {{ url_for('static', filename='js/spectrum.min.js')}}"></script>
     <script src="{{ url_for('static', filename='js/popper.min.js')}}" ></script>
     <script src="{{ url_for('static', filename='js/bootstrap/bootstrap.min.js')}}"></script>
 

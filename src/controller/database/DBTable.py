@@ -123,6 +123,10 @@ class TabPreference(DBTable):
 	def __init__(self, db):
 		super().__init__(db, "preference")
 
+class TabMailTemplate(DBTable):
+	def __init__(self, db):
+		super().__init__(db, "email_template")
+
 def get_filters_str(filters):
 	cond = ""
 	for key in filters:

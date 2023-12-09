@@ -10,7 +10,8 @@ from controller.database.DBTable import (
 	TabMailServer, 
 	TabEmailAccount, 
 	TabLanguage,
-	TabPreference
+	TabPreference,
+	TabMailTemplate
 	)
 
 from utils import today, mkdir
@@ -134,7 +135,7 @@ class Main():
 				dCopy.file = filePath
 				self.toSend.append(dCopy)
 
-	def send_emails(self, subject, body, emailAccount="", sendViaGoogle=0):
+	def send_emails(self, subject="", body="", emailAccount="", sendViaGoogle=False, useEmailTp=False, emailTemplate=""):
 		print("Envío de correos electrónicos")
 		if sendViaGoogle:
 			service = self.service.gmail()
@@ -142,15 +143,28 @@ class Main():
 		else:
 			service = self.get_smtp_service(emailAccount)
 			method = send_smtp
+		if useEmailTp:
+			subject, body = get_email_tp_data_pretty(emailTemplate)
+			
 
 		sents = 0
+		emailsSent = []
+		emailsUnsent = []
 		for d in self.toSend:
 			if Path(d.file).exists():
-				method(service, '',d.email,subject,body,attachments=[d.file])
-				sents += 1
-				print("Enviado para",d.email)
+				try:
+					sub = subject.replace("{{name}}", d.name)
+					bod = body.replace("{{name}}", d.name)
 
-		
+					method(service, '',d.email,sub,bod,attachments=[d.file])
+					sents += 1
+					print("Enviado para",d.email)
+					emailsSent.append(d.email)
+				except Exception as e:
+					print("Erro ao enviar e-mail para ",d.email)
+					log(str(e))
+					emailsUnsent.append(d.email)
+
 		return f"{sents} e-mails enviados"
 
 	def get_smtp_service(self, emailAccount):
@@ -206,7 +220,9 @@ def make_process(data):
 		main.set_just_send()
 
 	if int(data.sendEmail):
-		return main.send_emails(data.subject, data.body, data.emailAccount, int(data.sendViaGoogle))
+		return main.send_emails(data.subject, data.body, data.emailAccount, int(data.sendViaGoogle),
+						  data.useEmailTp,
+						  data.emailTemplate)
 
 	return f"{len(main.toCertificate)} certificados generados"
 
@@ -272,10 +288,39 @@ def get_rb_templates():
 		r.append(_dict(name=name))
 	return r
 
+def get_email_templates():
+	db = DataBase(get_db_path())
+	mailTemplate = TabMailTemplate(db)
+	query = mailTemplate._Listar(db, columns=["name"])
+	return query
+
+def get_blank_email_template():
+	paths = glob.glob(f'./static/email_template/email_tp.html')
+
+	for f in paths:
+		basename = os.path.basename(f)
+		name = basename.split(".")[0]
+		if name == "email_tp": continue
+		path = url_for('static', filename='email_template/'+basename)
+		return _dict(name=name, path=path)
+	
+def get_email_tp_data_pretty(emailTemplate):
+	try:
+		tpData = get_email_template_data(emailTemplate)[0]
+		subject = tpData.subject
+		del tpData["subject"]
+		with open("./static/email_template/email_tp.html", "r", encoding="utf-8") as f:
+			body = f.read().replace("\n", "")
+			for key in tpData:
+				body = body.replace("{{"+key+"}}", tpData[key] or "")
+		return subject, body
+	
+	except Exception as e:
+		log(str(e))
+		raise e
 def load_rb_template(filename):
 	with open("./cert_template/"+filename+".json", "r", encoding="utf-8") as f:
 		d = f.read()
-		print(d)
 		return json.loads(d)
 
 def load_custom_fonts():
@@ -382,6 +427,26 @@ def delete_settings(data):
 
 	return response
 
+def update_email_tp(data):
+	db = DataBase(get_db_path())
+	
+	mailTemplate = TabMailTemplate(db)
+	cond = {"name": data.name}
+	existe = mailTemplate._Exists(db, cond)
+
+	if existe:
+		response = mailTemplate._Actualizar(db, data, cond)
+	else:
+		response = mailTemplate._Crear(db, data)
+	return response
+
+def get_email_template_data(name):
+	db = DataBase(get_db_path())
+	mailTemplate = TabMailTemplate(db)
+	
+	query = mailTemplate._Listar(db, filters={"name": name})
+	
+	return query
 
 def get_languages():
 	db = DataBase(get_db_path())
@@ -411,6 +476,10 @@ def cleanOutputs(path, extension='docx'):
             except Exception as e:
                 pass
 
+
+def log(data):
+	with open("log.txt", "a", encoding="utf-8") as f:
+		f.write(data+"\n")
 
 if __name__ == "__main__":
 	pass

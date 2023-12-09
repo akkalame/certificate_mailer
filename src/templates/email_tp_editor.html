@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %} Editor de e-mail {% endblock %}
+
+{% block content %}
+	
+	<h1 class="mb-4">Editor de e-mail</h1>
+
+	<div class="container-fluid">
+		<div class="row">
+		<!-- Primera sección con campos de texto -->
+			<div class="col-md-6">
+				<div class="form-group">
+					<label for="logoTxt">Nome do modelo:</label>
+					<input type="text" class="form-control" id="templateName" placeholder="Nome do modelo">
+				</div>
+				<div class="form-group">
+					<label for="tituloTxt">Assunto:</label>
+					<input type="text" class="form-control" id="subjectTxt">
+				</div>
+				<div class="form-group">
+					<label for="tituloTxt">Título:</label>
+					<input type="text" class="form-control" id="tituloTxt">
+				</div>
+				<div class="form-group">
+					<label for="contenidoTxt">Conteúdo:</label>
+					<textarea class="form-control" id="contenidoTxt"></textarea>
+				</div>
+				<div class="form-group">
+					<label for="footerTxt">Rodapé:</label>
+					<textarea class="form-control" id="footerTxt"></textarea>
+				</div>
+				<div class="form-group">
+					<label for="logoTxt">Logotipo:</label>
+					<input type="text" class="form-control" id="logoTxt">
+				</div>
+				<div class="form-group">
+					<label for="colorHeader">Color:</label>
+					<input type="text" id="colorHeader" class="form-control colorpicker" value="#e74c3c">
+				</div>
+				<div class="form-group">
+					<button type="button" class="btn btn-primary mt-3" id="saveTp">Salvar</button>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-6">
+				<label for="templateSelect">Plantilla:</label>
+				<select class="form-select" aria-label="Default select example" id="templateSelect">
+					<option value=""></option>
+					{% for plantilla in plantillas %}
+						
+						<option value="{{ plantilla.name }}">{{ plantilla.name }}</option>
+					{% endfor %}
+				</select>
+				
+			</div>
+					
+		</div>
+		<div class="row">
+			
+				<input type="text" class="form-control d-none" id="pathBlankTp" 
+				value="{{url_for('static', filename='email_template/email_tp.html') }}">
+		<!-- Segunda sección con el iframe -->
+			<div class="col-md-12" style="margin-top: 30px;">
+				<iframe  id="preview" src="" width="100%" height="800" frameborder="0" ></iframe>
+
+			</div>
+		</div>
+	</div>
+	
+	
+	{% block custom_js %}
+		
+
+		<script type="text/javascript">
+			document.addEventListener("DOMContentLoaded", function() {
+				$("#saveTp").on("click",saveTp);
+
+				//render_preview();
+				$("#templateSelect").on("change",(e)=>{
+					let select = $("#templateSelect");
+					if (!select.val() || select.val() == ""){
+						$("#templateName").removeClass("d-none");
+						clearForm();
+					}else{
+						$("#templateName").addClass("d-none");
+						getEmailTemaplate(select.val());
+					}
+						//render_preview();
+				});
+				
+				$("#logoTxt").on("change",render_preview);
+				$("#tituloTxt").on("change",render_preview);
+				$("#contenidoTxt").on("change",render_preview);
+				$("#footerTxt").on("change",render_preview);
+				$("#colorHeader").on("change", render_preview)
+				$('#colorHeader').spectrum({
+					type: "color",
+					showInput: true,
+					showInitial: true,
+					preferredFormat: "hex",  // Obtener el valor en formato hexadecimal
+					move: function (color) {
+					// Manejar el evento 'move' para obtener el valor en tiempo real
+					$("#colorHeader").val(color.toHexString());
+					},
+				});
+
+				
+			});
+
+			function clearForm(){
+				$("#templateName").val("");
+				$("#tituloTxt").val("");
+				$("#contenidoTxt").val("");
+				$("#footerTxt").val("");
+				$("#logoTxt").val("");
+				$("#subjectTxt").val("");
+			}
+
+			function load_template(){
+				let pathTemplate = $("#pathBlankTp").val();
+				const miIframe = document.getElementById('preview');
+				miIframe.src = pathTemplate;
+			}
+			
+			function render_preview(){
+				let name = $("#templateName").val();
+				let header = $("#tituloTxt").val() || "";
+				let body = $("#contenidoTxt").val() || "";
+				let footer = $("#footerTxt").val() || "";
+				let logo = $("#logoTxt").val() || "";
+				let color = $("#colorHeader").val();
+				load_template();
+				const miIframe = document.getElementById('preview');
+				miIframe.onload = () => {
+					let iframeDocument = miIframe.contentWindow.document;
+					let logoE = iframeDocument.getElementById("logo");
+					if (logoE){
+						logoE.src = logo;
+					}
+					let headerE = iframeDocument.getElementById("emailHeader");
+					if (headerE){
+						headerE.innerHTML  = header;
+					}
+
+					let contentE = iframeDocument.getElementById("emailContent");
+					if (contentE){
+						contentE.innerHTML  = body;
+					}
+
+					let footerE = iframeDocument.getElementById("emailFooter");
+					if (footerE){
+						footerE.innerHTML  = footer;
+					}
+					let hE = iframeDocument.getElementById("header");
+					if (hE){
+						if (color && color !== "")
+							hE.style.backgroundColor = color;
+					}
+				}
+			}
+
+			function leerArchivo() {
+				const miIframe = document.getElementById('preview');
+				let iframeDocument = miIframe.contentDocument || miIframe.contentWindow.document;
+				let logoE = iframeDocument.getElementById("logo");
+				logoE.src = "https://euamolibras.com.br/wp-content/uploads/2023/08/Logo-Site-Novo.png";
+        // Cambia el atributo src del iframe
+        //miIframe.src = "{{ url_for('static', filename='email_template/amolibras.html')}}";
+				//console.log(iframeDocument.body.innerHTML);	
+				//iframeDocument.body.innerHTML = iframeDocument.body.innerHTML.replace('{{logo}}', 'https://euamolibras.com.br/wp-content/uploads/2023/08/Logo-Site-Novo.png');
+			}
+
+			function saveTp(){
+				let name = $("#templateName").val();
+				let header = $("#tituloTxt").val();
+				let subject = $("#subjectTxt").val();
+				let body = $("#contenidoTxt").val();
+				let footer = $("#footerTxt").val();
+				let logo = $("#logoTxt").val();
+				let color = $("#colorHeader").val();
+
+				if (name !== "" && name){
+					let data = {
+						name: name,
+						subject: subject || "",
+						body: body || "",
+						footer: footer || "",
+						logo:logo || "",
+						header: header || "",
+						header_color: color || ""
+					};
+
+					sendData(data);
+				}
+			}
+
+			function delEmailServer(){
+				let serverNameInput = document.getElementById('server_name');
+				let serverPortInput = document.getElementById('server_port');
+
+
+				if (serverNameInput.value != ""){
+					let data = {
+						type: "EmailServer",
+						server: serverNameInput.value
+					};
+
+					sendData(data, "DELETE");
+				}
+			}
+
+			function getEmailTemaplate(name) {
+				// Obtener el elemento select y los campos del formulario
+				data = sendData({name: name, type: "get"});
+			}
+			
+			function setEmailTemplateData(data){
+				let name = $("#templateName");
+				let subject = $("#tituloTxt");
+				let header = $("#subjectTxt");
+				let body = $("#contenidoTxt");
+				let footer = $("#footerTxt");
+				let logo = $("#logoTxt");
+				let color = $("#colorHeader");
+
+				data.forEach(function(d) {
+					name.val(d.name);
+					subject.val(d.subject || "");
+					body.val(d.body || "");
+					footer.val(d.footer || "");
+					logo.val(d.logo || "");
+					header.val(d.header || "");
+					color.val(d.header_color || "");
+				});
+				render_preview();
+			}
+
+			function sendData(data, method="POST") {
+				$.ajax({
+					url:"{{ url_for('editor_email')}}",
+					type:method,
+					data: data,
+					success: function(response){
+						if (response.type == "msg"){
+							alert(response.data);
+							location.reload();
+						}else{
+							setEmailTemplateData(response.data);
+						}
+						//$("#responseLbl").text( response.response);
+
+					},
+					error: function(error){
+						console.log(error);
+					},
+				});
+			}
+
+		</script>
+
+	{% endblock %}
+{% endblock %}

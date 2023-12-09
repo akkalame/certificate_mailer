@@ -79,13 +79,25 @@
                {% endfor %}
             </select>
          </div>
-         <div class="col-7">
+         <div class="mb-3 form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="useEmailTemplate" onchange="state_use_email_tp(this)">
+            <label class="form-check-label" for="useEmailTemplate">Use um modelo de e-mail</label>
+         </div>
+         <div class="col-7" id="emailDataSection">
             <label for="subjectTxt" class="form-label">Assunto do E-mail</label>
             <input type="text" class="form-control" id="subjectTxt" aria-describedby="spreadCellHelp">
 
             <label for="bodyTxt" class="form-label bg">Mensagem</label>
             <textarea class="form-control" aria-label="Body Message" id="bodyTxt" ></textarea>
          </div>
+         <div class="col-7" id="emailTemplateSection">
+            <label for="emailTemplateSelect" class="form-label">Modelo de e-mail</label>
+            <select class="form-select" aria-label="Default select example" id="emailTemplateSelect">
+              {% for tp in emailTemplates %}
+                 <option value="{{ tp['name'] }}">{{ tp['name'] }}</option>
+              {% endfor %}
+            </select>
+        </div>
      </div>
      
    </form>
@@ -102,6 +114,7 @@
       <script type="text/javascript">
          document.addEventListener("DOMContentLoaded", function() {
             $("#credencialTxt").hide();
+            $("#emailTemplateSection").hide()
             $("label[for='credencialTxt']").hide();
             $("#btnEnviar").on("click",sendData);
             $("#emailSection").hide();
@@ -136,8 +149,11 @@
             let sendViaGoogle = document.getElementById('sendViaGoogleCheck').checked ? 1:0;
             let emailAccount = $("#emailAccountSelect").val();
             let justSend = document.getElementById('justSendCheck').checked ? 1:0;
+            let useEmailTp = document.getElementById('useEmailTemplate').checked ? 1:0;
+            let emailTemplate = $("#emailTemplateSelect").val() || "";
 
-            if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && (sendEmail && subject != "" || !sendEmail)){
+            if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && 
+               ((sendEmail && subject != "") || (sendEmail && useEmailTp) || !sendEmail)){
                $.ajax({
                   url:"{{ url_for('generate')}}",
                   type:"POST",
@@ -153,7 +169,9 @@
                      sendEmail: sendEmail,
                      sendViaGoogle: sendViaGoogle,
                      emailAccount: emailAccount,
-                     justSend:justSend
+                     justSend:justSend,
+                     emailTemplate:emailTemplate,
+                     useEmailTp:useEmailTp
                   },
                   success: function(response){
                      $("#responseLbl").text( response.response);
@@ -176,6 +194,17 @@
                $("#credencialTxt").hide();
                $("label[for='credencialTxt']").hide();
                $("#credentialSelect").show();
+            }
+            
+         }
+         
+         function state_use_email_tp(check) {
+            if (check.checked) {
+               $("#emailDataSection").hide();
+               $("#emailTemplateSection").show();
+            }else{
+               $("#emailTemplateSection").hide();
+               $("#emailDataSection").show();
             }
             
          }

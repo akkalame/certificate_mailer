@@ -38,7 +38,7 @@
       $(document).ready(() => {
          $("#templateSelect").on("change",(e)=>{
             let pathTemplate = $("#templateSelect").val();
-            console.log(pathTemplate);
+           
             if (pathTemplate != "" && pathTemplate != null){
                $.ajax({
                   url:"{{ url_for('load_template')}}",

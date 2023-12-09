@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Plantilla de Correo Electrónico</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #f4f4f4;
+			margin: 0;
+			padding: 0;
+		}
+
+		header{
+			background-color: #e74c3c;
+			padding-top: 3rem;
+			text-align: center;
+		}
+		.logo {
+      text-align: center;
+    }
+
+    .logo img {
+      display: inline-block;
+    }
+
+		.card{
+			max-width: 600px;
+			margin: 0px auto;
+			padding: 20px;
+			
+		}
+		.card-header {
+			border-radius: 8px 8px 0px 0px;
+			box-shadow: 0 -10px 10px rgba(0, 0, 0, 0.2);
+			background-color: #fff;
+		}
+		.card-section {
+			border-radius: 0px 0px 8px 8px;
+			box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
+			background-color: #fff;
+      min-height: 200px;
+		}
+
+		h1 {
+			color: #333333;
+		}
+
+		p {
+			color: #666666;
+		}
+
+		.button {
+			display: inline-block;
+			padding: 10px 20px;
+			background-color: #3498db;
+			color: #ffffff;
+			text-decoration: none;
+			border-radius: 5px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<header id="header" style="background-color: {{header_color}};">
+			<div class="card card-header">
+				<h1 id="emailHeader">{{header}}</h1>
+			</div>
+			
+		</header>
+		<section class="card card-section">
+			<div class="logo" max-height="300">
+				<img src="{{logo}}" alt="" id="logo">
+			</div>
+      <div id="emailContent">
+        {{body}}
+      </div>
+		</section>
+		<footer class="card" id="emailFooter">
+			{{footer}}
+		</footer>
+		
+	</div>
+</body>
+</html>

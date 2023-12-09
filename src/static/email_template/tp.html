@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Picker con Spectrum</title>
+
+  <!-- Incluir Spectrum CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.css">
+
+  <!-- Incluir jQuery -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+
+  <!-- Incluir Spectrum JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.1/spectrum.min.js"></script>
+</head>
+<body>
+
+  <div class="container mt-5">
+    <div class="form-group">
+      <label for="colorPicker">Selecciona un color:</label>
+      <input type="text" class="form-control" id="colorPicker" value="#ff5733">
+    </div>
+  </div>
+  <button onclick="getcolor()"></button>
+  <script>
+    $(function () {
+      // Inicializar el color picker de Spectrum
+      $('#colorPicker').spectrum({
+        type: "color",
+        showInput: true,
+        showInitial: true,
+        preferredFormat: "hex",  // Obtener el valor en formato hexadecimal
+        move: function (color) {
+          // Manejar el evento 'move' para obtener el valor en tiempo real
+          $("#colorPicker").val(color.toHexString());
+        },
+      });
+    });
+
+	function getcolor(){
+		let color = $("#colorPicker").val();
+		console.log(color);
+	}
+
+  </script>
+
+</body>
+</html>

@@ -13,7 +13,11 @@ from main import (
 	get_email_accounts,
 	update_settings,
 	delete_settings,
-	get_languages
+	get_languages,
+	get_rb_templates,
+	get_email_templates,
+	update_email_tp,
+	get_email_template_data
 	)
 from utils import open_container_folder, get_port, open_browser
 
@@ -28,7 +32,9 @@ app.jinja_env.globals.update(load_custom_fonts=load_custom_fonts)
 def index():
 	return render_template('index.html', credenciales=get_tokens(), 
 		plantillas=get_cert_templates(),
-		emailAccounts=get_email_accounts())
+		emailAccounts=get_email_accounts(),
+		emailTemplates=get_email_templates()
+		)
 
 
 @app.route('/designer')
@@ -36,6 +42,27 @@ def designer():
 	custom_font = load_custom_fonts()
 	return render_template('reportbro_designer.html', plantillas=get_rb_templates(),
 		custom_fonts_css=Markup(custom_font['css']), json_cf=custom_font['json'])
+
+@app.route('/editor-email', methods=["GET", "POST", "DELETE"])
+def editor_email():
+	if request.method == 'GET':
+		plantillas = get_email_templates()
+		return render_template('email_tp_editor.html', plantillas=plantillas)
+	else:
+		data = _dict(request.form) 
+		print(data)
+		if request.method == 'POST':
+			
+			result = _dict(type="")
+			if data.get("type"):
+				result.type = "data"
+				result.data = get_email_template_data(data.name)
+			else:
+				result.type = "msg"
+				result.data = update_email_tp(data)
+
+		return jsonify(result)
+	
 
 @app.route('/settings', methods=["GET", "POST", "DELETE"])
 def settings():
