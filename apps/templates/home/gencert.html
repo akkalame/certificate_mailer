@@ -1,0 +1,324 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+	<!-- Content Header (Page header) -->
+	<section class="content-header">
+	  <div class="container-fluid">
+		<div class="row mb-2">
+		  <div class="col-sm-6">
+			<h1>Gerar certificado  </h1>
+		  </div>
+		  <div class="col-sm-6">
+			<ol class="breadcrumb float-sm-right">
+			  <li class="breadcrumb-item"><a href="#">Home</a></li>
+			  <li class="breadcrumb-item active">Gerar certificado</li>
+			</ol>
+		  </div>
+		</div>
+	  </div><!-- /.container-fluid -->
+	</section>
+
+	<!-- Main content -->
+	<section class="content">
+	  <div class="container-fluid" style="display: flex; justify-content: space-around;">
+			<div class="card card-primary">
+				<!-- /.card-header -->
+				<!-- form start -->
+				<form>
+					<div class="card-body">
+						<div id="responseLbl" style="text-align: center;"></div>
+						
+						<div class="form-group">
+							<div class="form-check form-switch">
+								<input class="form-check-input" type="checkbox" role="switch" id="newCredentialCheck" onchange="state_nueva_credencial(this)">
+								<label class="form-check-label" for="newCredentialCheck">Nova credencial no google</label>
+							</div>
+
+							<select class="custom-select" aria-label="Default select example" id="credentialSelect">
+								<option selected value="">Selecione uma credencial no google</option>
+								{% for credencial in data['credenciales'] %}
+									<option value="{{ credencial['name'] }}">{{ credencial['name'] }}</option>
+								{% endfor %}
+							</select>
+							
+							<label for="credencialTxt" class="form-label"></label>
+							<input type="text" class="form-control" id="credencialTxt" aria-describedby="credentialHelp" placeholder="Nome da credencial no google">
+							
+						</div>
+						<div class="form-group">
+							<label for="spreadLinkTxt" class="form-label">Link da planilha no Google Sheet</label>
+							<input type="text" class="form-control" id="spreadLinkTxt" aria-describedby="spreadLinkHelp">
+						</div>
+
+						<div class="form-group">
+							<div class="row">
+								<div class="col-4">
+									<label for="celda1Txt" class="form-label">Célula Inicial</label>
+									<input type="text" class="form-control" id="celda1Txt" oninput="upperCase(this)" aria-describedby="spreadCellHelp" placeholder="A1">
+								</div>
+								<div class="col-4">
+									<label for="celda2Txt" class="form-label">Célula Final</label>
+									<input type="text" class="form-control" id="celda2Txt" oninput="upperCase(this)" aria-describedby="spreadCellHelp" placeholder="C4">					
+								</div>
+								<div class="col-4">
+									<label for="faltaMaxima" class="form-label">Falta Máxima</label>
+									<input type="number" min="0" value="0" class="form-control" id="faltaMaxima" aria-describedby="spreadCellHelp">
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<label for="templateSelect" class="form-label">Modelo</label>
+							<select class="custom-select" aria-label="Default select example" id="templateSelect">
+								<option selected>Selecione um modelo</option>
+								{% for plantilla in data["plantillas"] %}
+									<option value="{{ plantilla['name'] }}">{{ plantilla['name'] }}</option>
+								{% endfor %}
+							</select>
+						</div>
+
+						<div class="form-check form-switch">
+							<div class="row" style="display: flex; justify-content: space-between;">
+								<div class="col-4">
+									<input class="form-check-input" type="checkbox" role="switch" id="sendEmailCheck" onchange="state_enviar_email(this)">
+									<label class="form-check-label" for="sendEmailCheck">Enviar certificados por e-mail</label>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-check form-switch" group-id="email-section">
+							<div class="row" style="display: flex; justify-content: space-between;">
+								<div class="col-4">
+									<input class="form-check-input" type="checkbox" value="" id="sendViaGoogleCheck">
+									<label class="form-check-label" for="sendViaGoogleCheck">
+									Enviar através do Google
+									</label>
+								</div>
+								<div class="col-4">
+									<input class="form-check-input" type="checkbox" value="" id="justSendCheck">
+									<label class="form-check-label" for="justSendCheck">
+									Solo Enviar
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group" id="emailAccountSection" group-id="email-section">
+							<label for="emailAccountSelect" class="form-label">Selecione uma conta SMTP</label>
+							<select class="custom-select" aria-label="SMTP Email Account" id="emailAccountSelect" onchange="setEmailAccountData()">
+								{% for ea in data["emailAccounts"] %}
+									<option value="{{ ea['email'] }}">{{ ea['email'] }}</option>
+								{% endfor %}
+							</select>
+						</div>
+
+						<div class="form-check form-switch" group-id="email-section">
+							<input class="form-check-input" type="checkbox" role="switch" id="useEmailTemplate" onchange="state_use_email_tp(this)">
+							<label class="form-check-label" for="useEmailTemplate">Use um modelo de e-mail</label>
+						</div>
+
+						<div class="form-group" id="emailDataSection" group-id="email-section">
+							<label for="subjectTxt" class="form-label">Assunto do E-mail</label>
+							<input type="text" class="form-control" id="subjectTxt" aria-describedby="spreadCellHelp">
+				
+							<label for="bodyTxt" class="form-label bg">Mensagem</label>
+							<textarea class="form-control" aria-label="Body Message" id="bodyTxt" ></textarea>
+						</div>
+						<div class="form-group" id="emailTemplateSection" group-id="email-section">
+							<label for="emailTemplateSelect" class="form-label">Modelo de e-mail</label>
+							<select class="custom-select" aria-label="Default select example" id="emailTemplateSelect">
+							{% for tp in data["emailTemplates"] %}
+								<option value="{{ tp['name'] }}">{{ tp['name'] }}</option>
+							{% endfor %}
+							</select>
+						</div>
+
+					</div>
+					<!-- /.card-body -->
+
+					<div class="card-footer">
+						<button class="btn btn-primary" type="button" id="btnEnviar">Gerar Certificados</button>
+					</div>
+				</form>
+			</div>		
+			
+	  </div><!-- /.container-fluid -->
+	</section>
+	<!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+
+  <script type="text/javascript">
+		document.addEventListener("DOMContentLoaded", function() {
+			$("#credencialTxt").hide();
+			$("#emailTemplateSection").hide()
+			$("label[for='credencialTxt']").hide();
+			$("#btnEnviar").on("click",sendData);
+			$("[group-id='email-section']").hide();
+			$("#btnSelectDir").on("click", open_container_folder);
+			$("#sendViaGoogleCheck").on("change", toggleEmailAccount);
+
+			let develop = false;
+			if (develop){
+				let spreadLinkTxt = $("#spreadLinkTxt");
+				spreadLinkTxt.val("https://docs.google.com/spreadsheets/d/1s7M9GnHU2nK5fNvGcWkS_G2Z_4imIXxhvrdnZdHtMrM/edit#gid=186001220");
+				let cell1 = $('#celda1Txt').val("A4");
+				let cell2 = $('#celda2Txt').val("L6");
+				let subject = $('#subjectTxt').val("Mensaje");
+				let body = $('#bodyTxt').val("Correo");
+			}
+		});
+
+		function sendData() {
+			//const dataForm = new FormData(document.getElementById('formData'));
+			let credentialName;
+			if (document.getElementById('newCredentialCheck').checked)
+				credentialName = $('#credencialTxt').val();
+			else
+				credentialName = $('#credentialSelect').val();
+
+			let spreadLink = $('#spreadLinkTxt').val();
+			let cell1 = $('#celda1Txt').val();
+			let cell2 = $('#celda2Txt').val();
+			let subject = $('#subjectTxt').val();
+			let body = $('#bodyTxt').val();
+			let sendEmail = document.getElementById('sendEmailCheck').checked ? 1:0;
+			let sendViaGoogle = document.getElementById('sendViaGoogleCheck').checked ? 1:0;
+			let emailAccount = $("#emailAccountSelect").val();
+			let justSend = document.getElementById('justSendCheck').checked ? 1:0;
+			let useEmailTp = document.getElementById('useEmailTemplate').checked ? 1:0;
+			let emailTemplate = $("#emailTemplateSelect").val() || "";
+
+			if (credentialName != "" && spreadLink != "" && cell1 != "" && cell2 != "" && 
+				((sendEmail && subject != "") || (sendEmail && useEmailTp) || !sendEmail)){
+				$.ajax({
+				url:"/{{ segment}}",
+				type:"POST",
+				data: {
+					credentialName: credentialName,
+					spreadLink: spreadLink,
+					cell1: cell1,
+					cell2: cell2,
+					subject: subject,
+					body: body,
+					faltaMax: $('#faltaMaxima').val(),
+					templatePath: $("#templateSelect").val(),
+					sendEmail: sendEmail,
+					sendViaGoogle: sendViaGoogle,
+					emailAccount: emailAccount,
+					justSend:justSend,
+					emailTemplate:emailTemplate,
+					useEmailTp:useEmailTp
+				},
+				success: function(response){
+					$("#responseLbl").text( response.response);
+
+				},
+				error: function(error){
+				console.log(error);
+				},
+				});
+			}
+
+			
+		}
+
+		function state_nueva_credencial(check) {
+			if (check.checked) {
+				$("#credentialSelect").hide();
+				$("#credencialTxt").show();
+			}else{
+				$("#credencialTxt").hide();
+				$("label[for='credencialTxt']").hide();
+				$("#credentialSelect").show();
+			}
+			
+		}
+		
+		function state_use_email_tp(check) {
+			if (check.checked) {
+				$("#emailDataSection").hide();
+				$("#emailTemplateSection").show();
+			}else{
+				$("#emailTemplateSection").hide();
+				$("#emailDataSection").show();
+			}
+			
+		}
+
+		function state_enviar_email(check) {
+			if (check.checked) {
+				$("[group-id='email-section']").show();
+				let useEmailTp = document.getElementById("useEmailTemplate");
+				if (useEmailTp.checked){
+					$("#emailTemplateSection").show();
+					$("#emailDataSection").hide();
+				}else{
+					$("#emailTemplateSection").hide();
+					$("#emailDataSection").show();
+				}
+			}else{
+				$("[group-id='email-section']").hide();
+			}
+
+			
+			
+		}
+
+		function toggleEmailAccount(){
+			if (document.getElementById('sendViaGoogleCheck').checked)
+				$("#emailAccountSection").hide();
+			else
+				$("#emailAccountSection").show();
+		}
+
+		function open_container_folder(){
+			$.ajax({
+				url:"/file-adming",
+				type:"GET",
+				success: function(response){
+				},
+				error: function(error){
+				console.log(error);
+				},
+			});
+		}
+
+		function upperCase(input) {
+			input.value = input.value.toUpperCase();
+		}
+   
+	</script>
+
+{% endblock javascripts %}
