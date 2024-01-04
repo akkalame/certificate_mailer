@@ -23,6 +23,7 @@ _build
 _static
 _templates
 
+/config/supervisor.conf
 # javascript
 package-lock.json
 .vscode/symbols.json
