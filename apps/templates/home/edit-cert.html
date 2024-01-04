@@ -1,0 +1,358 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+	<link rel="stylesheet" href="/static/assets/css/edit-cert.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+	<!-- Content Header (Page header) -->
+	<section class="content-header">
+	  <div class="container-fluid">
+		<div class="row mb-2">
+		  <div class="col-sm-6">
+			<h1>Editor de certificados </h1>
+		  </div>
+		  <div class="col-sm-6">
+			<ol class="breadcrumb float-sm-right">
+			  <li class="breadcrumb-item"><a href="#">Home</a></li>
+			  <li class="breadcrumb-item active">Editor de certificados</li>
+			</ol>
+		  </div>
+		</div>
+	  </div><!-- /.container-fluid -->
+	</section>
+
+	<!-- Main content -->
+	<section class="content">
+	  <div class="container-fluid">
+			<div id="tool-menu-section">
+				<div class="tools-menu">
+					<div class="row" >
+						<div class="col-1">Font Size (px)<input class="form-control" type="number" id="font_size" min="1" value="30"></div>
+						<div class="col-2">
+							Font
+							<select id="font_select" class="custom-select">
+								{% for cf in data['custom_fonts'] %}
+									<option value="{{cf}}">{{cf.title()}}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div class="col-1 align-items-b">
+							<div class="btn-group">
+								<button type="button" class="btn btn-default btn-flat style-type-btn" style-type="bold">
+									<i class="fas fa-bold"></i>
+								</button>
+								<button type="button" class="btn btn-default btn-flat style-type-btn" style-type="italic">
+									<i class="fas fa-italic"></i>
+								</button>
+							</div>
+						</div>
+						<div class="col-1 align-items-b">
+							<input type="file" class="d-none" id="page_img_input">
+							<button class="btn btn-default" id="new_page">
+								<i class="fas fa-file"></i>
+							</button>
+						</div>
+						<div class="col-3">
+							Modelo
+							<select id="template_select" class="custom-select">
+								<option selected></option>
+								{% for plantilla in data['plantillas'] %}
+									<option value="{{plantilla.name}}">{{plantilla.name}}</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div class="col-1 align-items-b">
+							<button class="btn btn-danger" id="deleteTplBtn"><i class="fas fa-trash-alt"></i></button>
+						</div>
+
+						<div class="col-2 align-items-b">
+							<button class="btn btn-primary" type="button" id="save_cert">Salvar Certificado</button>
+						</div>
+						
+					</div>
+				</div>
+			</div>
+			<div id="cert-container">
+				<div id="cert-content">
+				</div>
+			</div>
+			
+			
+	  </div><!-- /.container-fluid -->
+	</section>
+	<!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+	<script src="/static/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			$("#template_select").on("change", getTemplate);
+			$("#font_size").on("change", refreshCert);
+			$("#font_select").on("change", refreshCert)
+			$(".style-type-btn").on("click", function(event) {
+				var boton = event.target;
+				changeStyle(boton);
+			});
+			$("#page_img_input").on("change", addPage);
+			$("#save_cert").on("click", saveCert);
+			$("#new_page").on("click", newPage);
+			$("#deleteTplBtn").hide();
+			$("#deleteTplBtn").on("click", deleteTemplate);
+			
+			pageEvent();
+			refreshCert();
+		});
+
+		function updateFontSize(){
+			let fontSize = $("#font_size").val();
+			$("#cert-content").css("font-size", fontSize+"px");
+		}
+
+		function updateFont(){
+			let font = $("#font_select").val();
+			$("#cert-content").css("font-family", font);
+		}
+
+		function saveCert(){
+			let certContent = $("#cert-container").html();
+			const $div = $("<div>");
+			$div.html(certContent);
+			let previews = $div.find(".preview");
+			for (var i=0;i<previews.length;i++){
+				$(previews[i]).removeClass("preview");
+			}
+			let rmBtn = $div.find("button.remove");
+			for (var i=0;i<rmBtn.length;i++){
+				rmBtn[i].remove();
+			}
+			let dragText = $div.find("#dragable");
+			let dragChild = dragText.children();
+			for (var i=0;i<dragChild.length;i++){
+				$(dragChild[i]).remove();
+			}
+			certContent = $div.html();
+
+
+			let certName = $("#template_select").val();
+			if (!certName || certName == ""){
+				window.prompt("Nome do modelo");
+			}
+
+			if (certName !== null && certName !== "") {
+				let data = {
+					type_request: "save_template",
+					name: certName,
+					content: certContent
+				}
+				sendData(data);
+			}
+		}
+
+		function refreshCert(){
+			updateFontSize();
+			updateFont();
+		}
+
+		function changeStyle(e){
+			let btn = $(e);
+			if (btn.prop("tagName") === "I"){
+				btn = btn.parent();
+			}
+			let styleType = btn.attr("style-type");
+			let certContent = $("#cert-content");
+			if (certContent.hasClass(styleType)){
+				certContent.removeClass(styleType);
+				btn.removeClass("active");
+			}else{
+				certContent.addClass(styleType);
+				btn.addClass("active");
+			}
+		}
+
+		function addPage(){
+			let fileInput = $("#page_img_input");
+			subirImagen(fileInput[0].files[0], insertPage);
+			fileInput.val("");
+		}
+		
+		function insertPage(img64){
+			let removeE = "<button class='btn btn-danger remove'><i class='fas fa-trash-alt'></i></button>"
+			let certContent = $("#cert-content");
+			var div = document.createElement("div");
+			//div.innerHTML = "<img src='"+img64+"' alt=''>";
+			div.innerHTML = removeE;
+			certContent.append(div);
+			div = $(div);
+			div.addClass("page preview");
+			div.css("background-image", "url("+img64+")");
+
+			addDivName();
+			
+			pageEvent();
+
+			
+		}
+
+		function subirImagen(file, callback) {
+			// Verificamos que el archivo sea una imagen
+			if (!file.type.match(/^image\/(png|jpeg|gif|webp)$/)) {
+				return false;
+			}
+			var fileReader = new FileReader();
+
+			fileReader.onload = function() {
+				var base64Image = fileReader.result;
+				callback(base64Image);
+				return base64Image;
+			};
+
+			// Leemos el archivo
+			fileReader.readAsDataURL(file);
+
+		}
+
+		function newPage(){
+			$("#page_img_input").trigger("click");
+		}
+
+		function toggleRemoveBtnPage(){
+			$(".page").on("mouseenter", function(e) {
+				$(e.target).find(".remove").show();
+			});
+			$(".page").on("mouseleave", function(e) {
+				$(e.target).find(".remove").hide();
+			});
+		}
+
+		function removePage(){
+			$(".page .remove").on("click", function(e){
+				let page = $(e.target).parent();
+				if (page.prop("tagName") === "BUTTON"){
+					page = page.parent();
+				}
+				page.remove();
+				addDivName();
+			});
+		}
+	
+		function pageEvent(){
+			$("#dragable").draggable().resizable();
+			removePage();
+			toggleRemoveBtnPage();
+		}
+		
+		function addDivName(){
+			let certContent = $("#cert-content");
+			let divName = "<div id='dragable' class='text-center preview text-cert'>${name}</div>"
+			let pages = certContent.children(".page");
+			for(var i=0;i<pages.length;i++) {
+				let page = $(pages[i]);
+				if (page.find("#dragable").length > 0){
+					return;
+				}
+			}
+
+			pages[0].innerHTML = divName+pages[0].innerHTML ;
+				
+			
+		}
+
+		function getTemplate(){
+			let tpl = $("#template_select").val();
+			if (tpl && tpl !== ""){
+				data = {
+					type_request: "get_template",
+					name: tpl
+				}
+				sendData(data, loadTemplate);
+				$("#deleteTplBtn").show();
+			}else{
+				$("#cert-content").html("");
+				$("#deleteTplBtn").hide();
+			}
+		}
+
+		function loadTemplate(tpl){
+			$("#cert-container").html(tpl.tpl_content);
+			setPreview();
+			pageEvent();
+		}
+		
+		function setPreview(){
+			let removeE = "<button class='btn btn-danger remove'><i class='fas fa-trash-alt'></i></button>"
+			if (!$("#dragable").hasClass("preview") ){
+				$("#dragable").addClass("preview");
+			}
+			$(".page").each(function(index, e) {
+				if (!$(e).hasClass("preview")){
+					$(e).addClass("preview");
+				}
+				let btnRemove = $(e).find(".btn.remove");
+				if (btnRemove.length <=0 ){
+					$(e).append(removeE);
+				}
+			});
+
+		}
+
+		function deleteTemplate(){
+			let tpl = $("#template_select").val();
+			data = {
+				type_request: "delete_template",
+				name: tpl
+			}
+			sendData(data, reloadWindow);
+		}
+
+		function reloadWindow(r=null){
+			location.reload();
+		}
+
+		function sendData(data, callback=null, method="POST") {
+			$.ajax({
+				url:"/{{ segment }}",
+				type:method,
+				data: data,
+				success: function(response){
+					if (callback){
+						callback(response);
+					}
+					//location.reload();
+					//$("#responseLbl").text( response.response);
+
+				},
+				error: function(error){
+					console.log("error", error);
+				},
+			});
+		}
+	</script>
+{% endblock javascripts %}

@@ -71,6 +71,26 @@
 							</a>
 						</li>
 						<!-- fin roles -->
+
+						<!-- edit cert -->
+						<li class="nav-item ">
+							<a href="edit-cert" class="nav-link {% if 'edit-cert' in segment %} active {% endif %}">
+								<i class="nav-icon fas fa-pen-square"></i>
+								<p>
+									Editor de certificados
+								</p>
+							</a>
+						</li>
+						<!-- fin edit cert -->
+
+						<li class="nav-item ">
+							<a href="settings" class="nav-link {% if 'users' in segment %} active {% endif %}">
+								<i class="nav-icon fas fa-tools"></i>
+								<p>
+									Configuração
+								</p>
+							</a>
+						</li>
 					{% endif %}
 					
 					{% if "Developer" in user_roles %}

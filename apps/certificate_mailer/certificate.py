@@ -7,16 +7,19 @@ from apps.controllers import listEmailTemplate, listEmailAccount, listEmailServe
 import json, glob, os, random, base64
 from pathlib import Path
 from urllib.parse import unquote
-from docxtpl import DocxTemplate
-from docx2pdf import convert
-import pythoncom
+#from docxtpl import DocxTemplate
+#from docx2pdf import convert
+from weasyprint import HTML, CSS, Document
+from weasyprint.text.fonts import FontConfiguration
+from copy import deepcopy
+#import pythoncom
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Main():
 	def __init__(self):
-		pythoncom.CoInitialize()
+		#pythoncom.CoInitialize()
 		self.service = None
 		self.toCertificate = []
 		self.toSend = []
@@ -57,29 +60,43 @@ class Main():
 		self.toCertificate = r
 
 	def generate_cert(self, templatePath, pathToSave=None):
+		ext = ".html"
 		tp = os.path.join(basedir,"cert_template/"+templatePath)
-		if Path(tp+".docx").exists():
-			tp = tp + ".docx"
+		if Path(tp+ext).exists():
+			tp = tp + ext
 		else:
 			return 
 
 		pathToSave = validate_path_to_save(pathToSave)
+		self.gen_by_html(tp, pathToSave)
 
-		self.gen_by_docx(tp, pathToSave)
+	
+	def gen_by_html(self, tp, pathToSave=None):
+		with open(tp, "r", encoding="utf-8") as f:
+			baseHtml = f.read()
+		font_config = FontConfiguration()
 
-	def gen_by_docx(self, tp, pathToSave=None):
+		with open(os.path.join(basedir, "../static/assets/css/custom_fonts.css"), "r", encoding="utf-8") as f:
+			css_content = f.read()
+		with open(os.path.join(basedir, "../static/assets/css/edit-cert.css"), "r", encoding="utf-8") as f:
+			css_content += f.read()
 		
+		css = CSS(string=str(css_content), font_config=font_config)
+
 		for idx, d in enumerate(self.toCertificate):
-			doc = DocxTemplate(tp)
 			d.name = d.name.lower().title()
-			doc.render(d)
+			tpl = deepcopy(baseHtml)
+			tpl = tpl.replace("${name}", d.name)
+			
+			html = HTML(string=tpl)
+			print("html tpl ini")
 			filename = get_name_pdf(d, pathToSave)
 			filePath = pathToSave+filename
-			doc.save(f"{filePath}.docx")
+			print("path to save",filePath)
 			try:
-				convert(f"{filePath}.docx", f"{filePath}.pdf")
+				html.write_pdf(f"{filePath}.pdf", stylesheets=[css], font_config=font_config)
 			except Exception as e:
-				pass
+				raise e
 
 			if d.email != "":
 				dCopy = d
@@ -88,7 +105,7 @@ class Main():
 
 			#if os.path.exists(filePath+".pdf"):
 			#	os.remove(filePath+".docx")
-		cleanOutputs(pathToSave)
+		#cleanOutputs(pathToSave)
 
 	def set_just_send(self):
 		pathToSave = validate_path_to_save(None)
@@ -98,32 +115,7 @@ class Main():
 				filename = d.email.replace(".", "_")
 				dCopy.file = f"{pathToSave}/{filename}.pdf"
 				self.toSend.append(dCopy)
-	"""
-	def gen_by_rb(self, tp, pathToSave=None):
-		with open(tp, 'r', encoding="utf-8") as f:
-			content = f.read()
-			reportDefinition = json.loads(content)
-			
-		additionalFonts = get_additional_fonts()
-		#data = [{"name":"Isabela oliveira", "email":"devakkalame@gmail.com"}, {"name":"Pedro Oliveira","email":""}]
-		for d in self.toCertificate:
-			d.name = d.name.lower().title()
-			report = Report(report_definition=reportDefinition, data=d, 
-				additional_fonts=additionalFonts)
-			report_file = report.generate_pdf()
-
-			namePdf = get_name_pdf(d)
-			
-			filePath = pathToSave+namePdf+'.pdf'
-
-			with open(filePath, 'wb') as f:
-				f.write(report_file)
-
-			if d.email != "":
-				dCopy = d
-				dCopy.file = filePath
-				self.toSend.append(dCopy)
-	"""
+	
 	def send_emails(self, subject="", body="", emailAccount="", sendViaGoogle=False, useEmailTp=False, emailTemplate=""):
 		
 		service = self.get_smtp_service(emailAccount)
@@ -173,6 +165,7 @@ def make_process(data):
 	rows = main.rows_to_obj(rows, int(data.cell1[1:]))
 	main.availables_to_certificate(rows, data.faltaMax)
 	if not int(data.justSend):
+		print("generando")
 		main.generate_cert(data.templatePath)
 	else:
 		main.set_just_send()
@@ -246,3 +239,10 @@ def make_addr_email(email, name=""):
 	r = _dict()
 	r[email] = f"{name}"# <{email}>"
 	return r
+
+
+
+
+
+
+

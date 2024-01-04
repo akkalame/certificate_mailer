@@ -6,11 +6,13 @@ from apps.home.models import (
 	deleteRecord, 
 	EmailAccount, 
 	EmailTemplate,
-	EmailServer
+	EmailServer,
+	CustomFonts
 	)
 from apps import list2_dict, db
 from sqlalchemy import column
-
+from apps import socket_io_events as ioe
+from apps.controllers.builds import build_custom_fonts
 
 def listUsers(filters={}):
 	if filters:
@@ -19,8 +21,12 @@ def listUsers(filters={}):
 		query = db.session.query(Users).with_entities(Users.id, Users.username, Users.email).all()
 	return list2_dict(query, ["id","username", "email"])
 
-def listRoles():
-	query = db.session.query(Roles).with_entities(Roles.id, Roles.name, Roles.description).all()
+def listRoles(filters={}):
+	query = db.session.query(Roles)
+	if filters:
+		query.filter_by(**filters)
+	
+	query = query.with_entities(Roles.id, Roles.name, Roles.description).all()
 	return list2_dict(query, ["id","name", "description"])
 
 def listUserRoles(user_id=None, role_id=None):
@@ -80,6 +86,17 @@ def listEmailServer(filters={}):
 		"use_tls",
 	])
 
+def listCustomFonts(filters={}):
+	query = db.session.query(CustomFonts)
+	if filters:
+		query.filter_by(**filters)
+
+	query = query.with_entities(
+		CustomFonts.name, 
+		CustomFonts.url,
+	)
+	return list2_dict(query, ["name", "url"])
+
 def asignRole(data_form):
 	checked = int(data_form.checked)
 	del data_form['checked']
@@ -112,4 +129,27 @@ def current_user_to_arg(current):
 	
 	return {}
 
+
+def update_settings(data_form):
+	type_request = data_form.type_request
+	del data_form['type_request']
+
+	if type_request == "add_custom_font":
+		op = CustomFonts(**data_form)
+		result = createRecord(op)
+		if not result:
+			ioe.show_alert("Registro Exitoso")
+			build_custom_fonts(listCustomFonts())
+	elif type_request == "del_custom_font":
+		record = db.session.query(CustomFonts).filter_by(**data_form).first()
+		deleteRecord(record)
+		build_custom_fonts(listCustomFonts())
+
+def update_user(data_form):
+	type_request = data_form.type_request
+	del data_form['type_request']
+
+	if type_request == "delete_user":
+		record = db.session.query(Users).filter_by(**data_form).first()
+		deleteRecord(record)
 

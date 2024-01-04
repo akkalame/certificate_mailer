@@ -12,6 +12,11 @@ from importlib import import_module
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from flask_socketio import SocketIO
+
+app = Flask(__name__)
+socketio = SocketIO(app)
+
 DB_NAME = 'certificate_mailer.sqlite3'
 
 db = SQLAlchemy()
@@ -51,12 +56,14 @@ def configure_database(app):
         db.session.remove()
 
 
+
 def create_app(config):
-    app = Flask(__name__)
+    
     app.config.from_object(config)
     register_extensions(app)
     register_blueprints(app)
     configure_database(app)
+    
     return app
 
 

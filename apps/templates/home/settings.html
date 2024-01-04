@@ -1,0 +1,156 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+	<!-- Google Font: Source Sans Pro -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+	<!-- Theme style -->
+	<link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+{% block content %}
+
+	<!-- Content Wrapper. Contains page content -->
+	<div class="content-wrapper">
+		<!-- Content Header (Page header) -->
+		<section class="content-header">
+			<div class="container-fluid">
+				<div class="row mb-2">
+					<div class="col-sm-6">
+						<h1>Configuração</h1>
+					</div>
+					<div class="col-sm-6">
+						<ol class="breadcrumb float-sm-right">
+							<li class="breadcrumb-item"><a href="#">Home</a></li>
+							<li class="breadcrumb-item active">Configuração</li>
+						</ol>
+					</div>
+				</div>
+			</div><!-- /.container-fluid -->
+		</section>
+
+		<!-- Main content -->
+		<section class="content">
+			<div class="container-fluid" style="display: flex; justify-content: space-around;">
+				<div class="card card-primary">
+					<div class="card-header">
+						<h3 class="card-title">Custom Fonts</h3>
+					</div>
+					<div class="row">
+						<div class="col-5">
+							<form id="custom_fonts_form" action="">
+								<div class="card-body">
+									<div class="form-group">
+										<label for="font_name">Name</label>
+										<input type="text" class="form-control" id="font_name" placeholder="Font Name" name="font_name">
+									</div>
+									<div class="form-group">
+										<label for="font_url">URL</label>
+										<input type="url" class="form-control" id="font_url" placeholder="URL" name="font_url">
+									</div>
+										
+								</div>
+								<div class="card-footer">
+									<button  class="btn btn-primary" onclick="addCustomFont()">Submit</button>
+								</div>
+							</form>
+						</div>
+						
+						<div class="col-7">
+							<div class="card-body table-responsive p-0" style="height: 300px;">
+								<table class="table table-head-fixed text-nowrap">
+									<thead>
+										<tr>
+											<th>Name</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% for cf in data['custom_fonts'] %}
+											<tr id="custom_font_item_{{cf.replace(' ','_')}}">
+												<td>{{ cf }}</td>
+												<td><button class="btn btn-sm btn-danger remove" onclick="deleteCustomFont('{{cf}}')">
+													<i class="fas fa-trash-alt"></i></button></td>
+											</tr>
+										{% endfor %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+					
+					
+				</div>
+			</div><!-- /.container-fluid -->
+		</section>
+		<!-- /.content -->
+	</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+	<!-- jQuery -->
+	<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+	<!-- Bootstrap 4 -->
+	<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+	<!-- AdminLTE App -->
+	<script src="/static/assets/js/adminlte.min.js"></script>
+	<script type="text/javascript">
+		$(function(){
+			$("form").submit(function(e) {
+  			e.preventDefault();
+  		});
+		});
+
+		function addCustomFont(){
+			let fontName = $("#font_name").val();
+			let url = $("#font_url").val();
+			let data = {
+				type_request: "add_custom_font",
+				name: fontName,
+				url: url
+			}
+			sendData(data, "custom_fonts_form");
+		}
+
+		function deleteCustomFont(cfName){
+			let data = {
+				type_request: "del_custom_font",
+				name: cfName
+			}
+			sendData(data);
+			$("#custom_font_item_"+cfName.replace(" ", "_")).remove();
+		}
+
+
+		function sendData(data, formID=null, method="POST") {
+			$.ajax({
+				url:"/{{ segment }}",
+				type:method,
+				data: data,
+				success: function(response){
+					if (formID){
+						console.log(formID)
+						$("#"+formID).find("input").val("");
+					}
+
+				},
+				error: function(error){
+					console.log("error", error);
+				},
+			});
+		}
+
+	</script>
+{% endblock javascripts %}

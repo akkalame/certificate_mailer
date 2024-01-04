@@ -1,0 +1,58 @@
+.align-items-b{
+    display: flex; 
+    align-items: flex-end;
+}
+li {
+    list-style-type: none;
+}
+@page {
+    size: landscape; /* Change from the default size of A4 */
+    margin: 0cm; /* Set margin on each page */
+}
+#cert-container{
+    padding: 0px 30px;
+}
+.page{
+    width: 29.7cm;
+    height: 21cm;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+.page.preview{
+    border: 1px dashed black;
+}
+.page img{
+    height: 21cm;
+}
+.page button.remove{
+    font-size: 15px;
+    position: relative;
+    left: -40px;
+    display: none;
+}
+.text-cert.preview{
+    border: 0.5px dashed black;
+}
+
+#tool-menu-section{
+    padding-bottom: 10px;
+}
+
+#page-section{
+    display: flex;
+    flex-direction: row;
+}
+
+.style-type-btn.active{
+    background-color: #e9ecef;
+}
+
+.bold{
+    font-weight: bold;
+}
+.italic{
+    font-style: italic;
+}
+.text-center{
+    text-align: center;
+}
