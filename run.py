@@ -9,7 +9,7 @@ from   flask_minify  import Minify
 from   sys import exit
 
 from apps.config import config_dict
-from apps import create_app, db
+from apps import create_app, db, socketio
 
 
 # WARNING: Don't run with debug turned on in production!
@@ -44,4 +44,5 @@ if DEBUG:
 
 
 if __name__ == "__main__":
-    app.run()
+    socketio.run(app, port=5005)
+    #app.run(port=5005)
