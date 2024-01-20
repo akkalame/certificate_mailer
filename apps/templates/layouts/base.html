@@ -40,30 +40,6 @@
 
 {% block javascripts %}{% endblock javascripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>
-<script>
-	$(function(){
-		const socket = io();
-
-		/*const messageInput = document.getElementById('message');
-		const sendButton = document.getElementById('send');
-		*/
-		/*sendButton.addEventListener('click', () => {
-				const message = messageInput.value;
-				socket.emit('message', message);
-				messageInput.value = '';
-		});*/
-
-		socket.on('open_new_tab', (data) => {
-			window.open(data.url);
-		});
-
-		socket.on("dialog", (data) =>{
-			if (data.type == "alert"){
-				alert(data.msg);
-			}
-		});
-	});
-	
-</script>
+<script src="/static/assets/js/socketio_events.js"></script>
 </body>
 </html>

@@ -149,3 +149,6 @@ def createRecord(arg):
 def deleteRecord(arg):
 	db.session.delete(arg)
 	db.session.commit()
+
+def updateRecord(arg):
+	pass

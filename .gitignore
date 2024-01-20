@@ -23,7 +23,9 @@ _build
 _static
 _templates
 
-/config/supervisor.conf
+config/supervisor.conf
+*Zone.Identifier
+
 # javascript
 package-lock.json
 .vscode/symbols.json
@@ -34,4 +36,5 @@ apps/static/assets/.temp
 
 apps/certificate_mailer/tokens/
 apps/certificate_mailer/pdf/
+apps/certificate_mailer/kernel/
 

@@ -1,36 +1,50 @@
+from flask import session
+
 from apps.certificate_mailer import utils
-from apps.certificate_mailer.googlecon import Service
+from apps.certificate_mailer.googlecon import GoogleCon
 from apps.certificate_mailer.utils import today, mkdir
 from apps.certificate_mailer.email_controller import send_smtp, smtp_service
 from apps import _dict
-from apps.controllers import listEmailTemplate, listEmailAccount, listEmailServer
+from apps.controllers import listEmailTemplate, listEmailAccount, listEmailServer, listGoogleTokens, current_user_to_arg
 import json, glob, os, random, base64
 from pathlib import Path
-from urllib.parse import unquote
-#from docxtpl import DocxTemplate
-#from docx2pdf import convert
 from weasyprint import HTML, CSS, Document
 from weasyprint.text.fonts import FontConfiguration
 from copy import deepcopy
-#import pythoncom
+from flask_login import (
+	current_user
+)
+
+import json
+
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Main():
 	def __init__(self):
-		#pythoncom.CoInitialize()
-		self.service = None
+		self.googleCon = None
 		self.toCertificate = []
 		self.toSend = []
 
 	def connect_to_google(self,tokenName):
-		
-		self.service = Service()
-		self.service.get_creds(tokenName)
+		user = current_user_to_arg(current_user)
+		if user:
+			print("connecting to google\n")
+			googleToken = listGoogleTokens({"user_id": user.id, "name": tokenName})
+			print("googletoken", googleToken)
+			googleTokenInfo = {}
+			if googleToken:
+				googleTokenInfo = googleToken[0]
+			#print(googleTokenInfo)
+			self.googleCon = GoogleCon()
+			self.googleCon.load_creds(googleTokenInfo)
+			
+			return self.googleCon.gCreds
+		raise "User not connected"
 
 	def get_sheet_values(self, sheetId, rangeName):
-		sheet = self.service.sheets().spreadsheets()
+		sheet = self.googleCon.sheets().spreadsheets()
 		result = sheet.values().get(
 			spreadsheetId=sheetId, range=rangeName).execute()
 		return result.get('values', [])
@@ -116,7 +130,7 @@ class Main():
 				dCopy.file = f"{pathToSave}/{filename}.pdf"
 				self.toSend.append(dCopy)
 	
-	def send_emails(self, subject="", body="", emailAccount="", sendViaGoogle=False, useEmailTp=False, emailTemplate=""):
+	def send_emails(self, subject="", body="", emailAccount="", useEmailTp=False, emailTemplate=""):
 		
 		service = self.get_smtp_service(emailAccount)
 		method = send_smtp
@@ -157,26 +171,27 @@ class Main():
 
 def make_process(data):
 	main = Main()
-	main.connect_to_google(data.credentialName)
-	sheetId = utils.sheet_id_from_link(data.spreadLink)
-	rangeName = f"{data.cell1.upper()}:{data.cell2.upper()}"
-	rows = main.get_sheet_values(sheetId, rangeName)
+	creds = main.connect_to_google(data.credentialName)
+	if creds:
+		sheetId = utils.sheet_id_from_link(data.spreadLink)
+		rangeName = f"{data.cell1.upper()}:{data.cell2.upper()}"
+		rows = main.get_sheet_values(sheetId, rangeName)
 
-	rows = main.rows_to_obj(rows, int(data.cell1[1:]))
-	main.availables_to_certificate(rows, data.faltaMax)
-	if not int(data.justSend):
-		print("generando")
-		main.generate_cert(data.templatePath)
+		rows = main.rows_to_obj(rows, int(data.cell1[1:]))
+		main.availables_to_certificate(rows, data.faltaMax)
+		if not int(data.justSend):
+			main.generate_cert(data.templatePath)
+		else:
+			main.set_just_send()
+
+		if int(data.sendEmail):
+			return main.send_emails(data.subject, data.body, data.emailAccount,
+							data.useEmailTp,
+							data.emailTemplate)
+
+		return f"{len(main.toCertificate)} certificados generados"
 	else:
-		main.set_just_send()
-
-	if int(data.sendEmail):
-		return main.send_emails(data.subject, data.body, data.emailAccount, int(data.sendViaGoogle),
-						  data.useEmailTp,
-						  data.emailTemplate)
-
-	return f"{len(main.toCertificate)} certificados generados"
-
+		session['credential_filename'] = data.credentialName
 
 def validate_path_to_save(pathToSave):
 	if not pathToSave:

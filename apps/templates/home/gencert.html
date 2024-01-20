@@ -50,14 +50,14 @@
 						
 						<div class="form-group">
 							<div class="form-check form-switch">
-								<input class="form-check-input" type="checkbox" role="switch" id="newCredentialCheck" onchange="state_nueva_credencial(this)">
+								<input class="form-check-input" type="checkbox" role="switch" id="newCredentialCheck" onchange="state_nueva_credencial()" {%if not data['credenciales']%} checked {%endif%}>
 								<label class="form-check-label" for="newCredentialCheck">Nova credencial no google</label>
 							</div>
 
 							<select class="custom-select" aria-label="Default select example" id="credentialSelect">
 								<option selected value="">Selecione uma credencial no google</option>
 								{% for credencial in data['credenciales'] %}
-									<option value="{{ credencial['name'] }}">{{ credencial['name'] }}</option>
+									<option value="{{ credencial.name }}">{{ credencial.name }}</option>
 								{% endfor %}
 							</select>
 							
@@ -108,12 +108,6 @@
 
 						<div class="form-check form-switch" group-id="email-section">
 							<div class="row" style="display: flex; justify-content: space-between;">
-								<div class="col-4">
-									<input class="form-check-input" type="checkbox" value="" id="sendViaGoogleCheck">
-									<label class="form-check-label" for="sendViaGoogleCheck">
-									Enviar através do Google
-									</label>
-								</div>
 								<div class="col-4">
 									<input class="form-check-input" type="checkbox" value="" id="justSendCheck">
 									<label class="form-check-label" for="justSendCheck">
@@ -166,7 +160,7 @@
 	</section>
 	<!-- /.content -->
   </div>
-
+  
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
@@ -180,23 +174,24 @@
   <script src="/static/assets/js/adminlte.min.js"></script>
 
   <script type="text/javascript">
+
 		document.addEventListener("DOMContentLoaded", function() {
-			$("#credencialTxt").hide();
+			$(".modal").modal("toggle")
+			state_nueva_credencial();
 			$("#emailTemplateSection").hide()
 			$("label[for='credencialTxt']").hide();
 			$("#btnEnviar").on("click",sendData);
 			$("[group-id='email-section']").hide();
 			$("#btnSelectDir").on("click", open_container_folder);
-			$("#sendViaGoogleCheck").on("change", toggleEmailAccount);
 
-			let develop = false;
+			let develop = true;
 			if (develop){
 				let spreadLinkTxt = $("#spreadLinkTxt");
-				spreadLinkTxt.val("https://docs.google.com/spreadsheets/d/1s7M9GnHU2nK5fNvGcWkS_G2Z_4imIXxhvrdnZdHtMrM/edit#gid=186001220");
+				spreadLinkTxt.val("https://docs.google.com/spreadsheets/d/1NSMVDUmRkYZ_uYrXDIni9FQdZXH2hME5ivEJHRjB7xU/edit#gid=186001220");
 				let cell1 = $('#celda1Txt').val("A4");
-				let cell2 = $('#celda2Txt').val("L6");
-				let subject = $('#subjectTxt').val("Mensaje");
-				let body = $('#bodyTxt').val("Correo");
+				let cell2 = $('#celda2Txt').val("B4");
+				//let subject = $('#subjectTxt').val("Mensaje");
+				//let body = $('#bodyTxt').val("Correo");
 			}
 		});
 
@@ -214,7 +209,6 @@
 			let subject = $('#subjectTxt').val();
 			let body = $('#bodyTxt').val();
 			let sendEmail = document.getElementById('sendEmailCheck').checked ? 1:0;
-			let sendViaGoogle = document.getElementById('sendViaGoogleCheck').checked ? 1:0;
 			let emailAccount = $("#emailAccountSelect").val();
 			let justSend = document.getElementById('justSendCheck').checked ? 1:0;
 			let useEmailTp = document.getElementById('useEmailTemplate').checked ? 1:0;
@@ -235,7 +229,6 @@
 					faltaMax: $('#faltaMaxima').val(),
 					templatePath: $("#templateSelect").val(),
 					sendEmail: sendEmail,
-					sendViaGoogle: sendViaGoogle,
 					emailAccount: emailAccount,
 					justSend:justSend,
 					emailTemplate:emailTemplate,
@@ -254,7 +247,8 @@
 			
 		}
 
-		function state_nueva_credencial(check) {
+		function state_nueva_credencial() {
+			let check = document.getElementById("newCredentialCheck")
 			if (check.checked) {
 				$("#credentialSelect").hide();
 				$("#credencialTxt").show();
@@ -296,12 +290,6 @@
 			
 		}
 
-		function toggleEmailAccount(){
-			if (document.getElementById('sendViaGoogleCheck').checked)
-				$("#emailAccountSection").hide();
-			else
-				$("#emailAccountSection").show();
-		}
 
 		function open_container_folder(){
 			$.ajax({

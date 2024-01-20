@@ -11,7 +11,7 @@ from apps.certificate_mailer import (
 	get_email_accounts,
 	update_cert_template
 )
-from apps.certificate_mailer.certificate import make_process
+from apps.certificate_mailer.certificate import make_process, GoogleCon
 from apps.controllers import (
 	listUsers, 
 	listRoles, 
@@ -22,17 +22,17 @@ from apps.controllers import (
 	listEmailTemplate,
 	update_settings,
 	listCustomFonts,
-	update_user
+	update_user,
+	updateGOAT
 )
-from flask import render_template, request
+from flask import render_template, request, session
 from flask_login import (
 	current_user,
 	login_required
 )
-#from run import socketio
-
+from apps import socket_io_events as ioe
 from jinja2 import TemplateNotFound
-
+import json
 
 @blueprint.route('/index')
 @login_required
@@ -41,6 +41,26 @@ def index():
 	data = get_data_from_segment("gencert")
 	return render_template('home/gencert.html', segment='gencert', data=data, user_roles=user_roles_name)
 
+@blueprint.route("/login/oauth2/code/google", methods=['GET', 'POST'])
+def google_oauth2():
+	msg = "Credenciales no guardadas, por favor reintente el proceso"
+	tokenName = session['credential_filename']
+	if tokenName:
+		user = current_user_to_arg(current_user)
+		creds = json.loads(GoogleCon().fetch_token(request.url, session['credential_filename']).to_json())
+		
+		token = _dict(creds)
+		token.user_id = user.id
+		token.name = tokenName
+		result = updateGOAT(token)
+		if not result:
+			msg = "Credenciales Guardadas con exito, por favor ejecute el proceso de generar los certificados de nuevo."
+		else:
+			msg = result
+	start_url = request.url.split("?")[0]
+	#ioe.remove_tab_with_url(start_url)
+	#ioe.msgprint(msg)
+	return "Proceso Completado, ya puede cerrar esta pestaña." if not result else result
 
 @blueprint.route('/<template>', methods=['GET', 'POST'])
 @login_required
@@ -125,18 +145,21 @@ def get_data_from_segment(segment, args=_dict()):
 	return _dict()
 
 def set_data_for_segment(segment, data_form):
-	if segment == "edit-role":
-		asignRole(data_form)
-	elif segment == "gencert":
-		r = make_process(data_form)
-	elif segment == "edit-cert":
-		return update_cert_template(data_form) or _dict()
-	elif segment == "settings":
-		update_settings(data_form)
-	elif segment == "users":
-		update_user(data_form)
+	try:
+		if segment == "edit-role":
+			asignRole(data_form)
+		elif segment == "gencert":
+			r = make_process(data_form)
+		elif segment == "edit-cert":
+			return update_cert_template(data_form) or _dict()
+		elif segment == "settings":
+			update_settings(data_form)
+		elif segment == "users":
+			update_user(data_form)
 
-	return _dict()
+		return _dict()
+	except Exception as e:
+		raise e
 
 
 

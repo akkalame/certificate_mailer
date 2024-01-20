@@ -9,8 +9,6 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from importlib import import_module
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from flask_socketio import SocketIO
 
@@ -18,6 +16,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 DB_NAME = 'certificate_mailer.sqlite3'
+DEVELOPER_MODE = True
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -97,5 +96,7 @@ def list2_dict(list, keys):
     return data
 
 
+
+    
 
 

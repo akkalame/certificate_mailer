@@ -38,6 +38,36 @@ class Users(db.Model, UserMixin):
         return str(self.username)
 
 
+
+class GoogleOAuthToken(db.Model):
+
+    __tablename__ = 'Google OAuth Token'
+
+    user_id = db.Column(db.Integer)
+    name = db.Column(db.String(64))
+    token = db.Column(db.String(300))
+    refresh_token = db.Column(db.String(160))
+    token_uri = db.Column(db.String(100))
+    client_id = db.Column(db.String(160), primary_key=True)
+    client_secret = db.Column(db.String(100))
+    scopes = db.Column(db.String(100))
+    expiry = db.Column(db.String(35))
+
+    def __init__(self, **kwargs):
+        for property, value in kwargs.items():
+            # depending on whether value is an iterable or not, we must
+            # unpack it's value (when **kwargs is request.form, some values
+            # will be a 1-element list)
+            if hasattr(value, '__iter__') and not isinstance(value, str):
+                # the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+                value = value[0]
+
+            setattr(self, property, value)
+
+    def __repr__(self):
+        return str(self.name)
+
+
 @login_manager.user_loader
 def user_loader(id):
     return Users.query.filter_by(id=id).first()

@@ -1,16 +1,19 @@
 import json, glob, os, random, base64
 from apps import _dict
-from apps.controllers import listEmailAccount
+from apps.controllers import listEmailAccount, listGoogleTokens
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 def get_tokens():
-	paths = glob.glob(os.path.join(basedir, 'tokens/*.json'))
-	r = []
-	for f in paths:
-		name = os.path.basename(f).split(".")[0]
-		r.append(_dict(name=name))
-	return r
+	#paths = glob.glob(os.path.join(basedir, 'tokens/*.json'))
+	#r = []
+	#for f in paths:
+	#	name = os.path.basename(f).split(".")[0]
+	#	r.append(_dict(name=name))
+	
+	records = listGoogleTokens()
+	tokens = [_dict(name=r.name) for r in records]
+	return records
 
 def get_cert_templates():
 	return get_html_templates()
