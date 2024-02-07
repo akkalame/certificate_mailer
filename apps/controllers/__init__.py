@@ -7,12 +7,14 @@ from apps.home.models import (
 	EmailAccount, 
 	EmailTemplate,
 	EmailServer,
-	CustomFonts
+	CustomFonts,
+	Student
 	)
 from apps import list2_dict, db, _dict
 from sqlalchemy import column
 from apps import socket_io_events as ioe
 from apps.controllers.builds import build_custom_fonts
+from apps.certificate_mailer.utils import generate_code
 
 def listUsers(filters={}):
 	if filters:
@@ -97,7 +99,7 @@ def listCustomFonts(filters={}):
 	)
 	return list2_dict(query, ["name", "url"])
 
-def listGoogleTokens(filters=_dict(), raw=False):
+def listGoogleTokens(filters=_dict()):
 	qb = db.session.query(GoogleOAuthToken)
 	if filters:
 		qb.filter_by(**filters)
@@ -114,10 +116,7 @@ def listGoogleTokens(filters=_dict(), raw=False):
 		GoogleOAuthToken.expiry
 		).all()
 	
-	if raw:
-		return query
-
-	print("query", query)
+	
 	result = list2_dict(query, [
 		"user_id", "name", "token",
 		"refresh_token","token_uri","client_id",
@@ -125,11 +124,24 @@ def listGoogleTokens(filters=_dict(), raw=False):
 	for r in result:
 		r.scopes = r.scopes.split(",")
 	
-	print("\nresult",result)
 	if filters:
 		return strictFilter(result, _dict(filters))
 
 	return result
+
+def listStudent(filters={}, offset=0, limit=20):
+	offset = int(offset)
+	limit = int(limit)
+	query = Student.query.order_by(Student.name).limit(limit)
+	if filters:
+		query = query.filter_by(**filters)
+	if offset != 0:
+		query = query.offset(offset*limit)
+	count = Student.query.count()
+	query = query.with_entities(Student.id, Student.name, Student.email, Student.dni, Student.code).all()
+	
+	return list2_dict(query, ["id","name", "email", "dni", "code"]), count
+
 
 
 def asignRole(data_form):
@@ -173,10 +185,9 @@ def updateGOAT(data):
 			return "La cuenta google que intenta vincular ya se encuentra en uso con otro usuario."
 
 	if user_tokens:
-		record = listGoogleTokens({"user_id": data.user_id, "client_id": data.client_id}, raw=True)[0]
+		filters = {"user_id": data.user_id, "client_id": data.client_id}
+		record = GoogleOAuthToken.query.filter_by(**filters).first()
 		record.token = data.token
-		record.token_uri = data.token_uri
-		record.client_secret = data.client_secret
 		record.scopes = data.scopes
 		record.expiry = data.expiry
 		if data.get("refresh_token"):
@@ -210,14 +221,31 @@ def update_user(data_form):
 		record = db.session.query(Users).filter_by(**data_form).first()
 		deleteRecord(record)
 
+def update_student(data):
+	if data.id:
+		record = Student.query.filter_by(id=data.id).first()
+		record.name = data.name
+		record.email = data.email
+		record.dni = data.dni
+		db.session.commit()
+		ioe.show_alert({"icon":"success", "title":"Aluno atualizado com sucesso."})
+	else:
+		if Student.query.filter_by(dni=data.dni).first():
+			return "DNI Pertence a outro aluno"
+		if Student.query.filter_by(email=data.email).first():
+			return "Email Pertence a outro aluno"
+		
+		del data["id"]
+		data.code = generate_code(8).upper()
+		record = Student(**data)
+		createRecord(record)
+		ioe.show_alert({"icon":"success", "title":"Aluno registrado com sucesso."})
+
 def strictFilter(data: list, filters: _dict):
 	r = []
-	print("filters", filters)
 	for d in data:
 		valid = True
 		for k, v in filters.items():
-			print(k,":",v)
-			print(d[k])
 			if d[k] != v:
 				valid = False
 				break

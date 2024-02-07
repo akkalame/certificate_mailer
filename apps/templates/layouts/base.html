@@ -7,8 +7,9 @@
 	<link rel="canonical" href="https://appseed.us/adminlte"/>
 	<link rel="stylesheet" href="/static/assets/plugins/jquery-ui/jquery-ui.min.css">
 	<link rel="stylesheet" href="/static/assets/plugins/jquery-ui/jquery-ui.structure.min.css">
+	<link rel="stylesheet" href="/static/assets/plugins/sweetalert2/sweetalert2.min.css">
 	<link rel="stylesheet" href="/static/assets/css/custom_fonts.css">
-
+	<link rel="stylesheet" href="/static/assets/css/custom_modals.css">
 	<title>
 		AdminLTE Flask - {% block title %}{% endblock %} | AppSeed
 	</title> 
@@ -32,11 +33,25 @@
 				<!-- Control sidebar content goes here -->
 		</aside>
 		<!-- /.control-sidebar -->
+		
 
 </div>
+
+
 <!-- ./wrapper -->
 
 <!-- Specific Page JS goes HERE  -->
+<!-- jQuery -->
+<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+<script src="/static/assets/plugins/jquery-ui/jquery-ui.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+
+<script src="/static/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
+<script src="/static/assets/js/adminlte.min.js"></script>
+<script src="/static/assets/js/dialog_component.js"></script>
+<script src="/static/assets/js/certificate_mailer.js"></script>
 
 {% block javascripts %}{% endblock javascripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.min.js"></script>

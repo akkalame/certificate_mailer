@@ -50,6 +50,56 @@
 					{% endif %}
 
 					{% if "Administrator" in user_roles %}
+						<!-- Clases -->
+						<li class="nav-item has-treeview {% if 'index' in segment %} menu-open {% endif %}">
+							<a href="#" class="nav-link {% if 'index' in segment %} active {% endif %}">
+								<i class="nav-icon fas fa-tachometer-alt"></i>
+								<p>
+									Classes
+									<i class="right fas fa-angle-left"></i>
+								</p>
+							</a>
+							<ul class="nav nav-treeview">
+								<li class="nav-item">
+									<a href="/student" class="nav-link {% if 'student' in segment %} active {% endif %}">
+										<i class="far fa-circle nav-icon"></i>
+										<p>Estudante</p>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a href="/matter" class="nav-link {% if 'matter' in segment %} active {% endif %}">
+										<i class="far fa-circle nav-icon"></i>
+										<p>Assunto</p>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a href="/matter_module" class="nav-link {% if 'matter_module' in segment %} active {% endif %}">
+										<i class="far fa-circle nav-icon"></i>
+										<p>Módulo de assunto</p>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a href="/teacher" class="nav-link {% if 'teacher' in segment %} active {% endif %}">
+										<i class="far fa-circle nav-icon"></i>
+										<p>Professor</p>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a href="/course" class="nav-link {% if 'course' in segment %} active {% endif %}">
+										<i class="far fa-circle nav-icon"></i>
+										<p>Curso</p>
+									</a>
+								</li>
+								<li class="nav-item">
+									<a href="/attendance_list" class="nav-link {% if 'attendance_list' in segment %} active {% endif %}">
+										<i class="far fa-circle nav-icon"></i>
+										<p>Lista de presença</p>
+									</a>
+								</li>
+							</ul>
+						</li>
+						<!-- fin clases -->	
+
 						<!-- users -->
 						<li class="nav-item ">
 							<a href="users" class="nav-link {% if 'users' in segment %} active {% endif %}">

@@ -139,6 +139,143 @@ class CustomFonts(db.Model):
 	def __repr__(self):
 		return str(self.name)
 
+class Student(db.Model):
+
+	__tablename__ = 'Student'
+
+	id = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(150), unique=False)
+	dni = db.Column(db.String(50))
+	email = db.Column(db.String(255), unique=True)
+	code = db.Column(db.String(10), unique=True)
+
+	def __init__(self, **kwargs):
+		for property, value in kwargs.items():
+			# depending on whether value is an iterable or not, we must
+			# unpack it's value (when **kwargs is request.form, some values
+			# will be a 1-element list)
+			if hasattr(value, '__iter__') and not isinstance(value, str):
+				# the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+				value = value[0]
+
+			setattr(self, property, value)
+
+	def __repr__(self):
+		return str(f"{self.role}, {self.dni}")
+
+class Matter(db.Model):
+
+	__tablename__ = 'Matter'
+
+	id = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(150), unique=True)
+
+	def __init__(self, **kwargs):
+		for property, value in kwargs.items():
+			# depending on whether value is an iterable or not, we must
+			# unpack it's value (when **kwargs is request.form, some values
+			# will be a 1-element list)
+			if hasattr(value, '__iter__') and not isinstance(value, str):
+				# the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+				value = value[0]
+
+			setattr(self, property, value)
+
+	def __repr__(self):
+		return str(self.name)
+
+class MatterModule(db.Model):
+
+	__tablename__ = 'Matter Module'
+
+	id = db.Column(db.Integer, primary_key=True)
+	matter_id = db.Column(db.Integer)
+	name = db.Column(db.String(30))
+
+	def __init__(self, **kwargs):
+		for property, value in kwargs.items():
+			# depending on whether value is an iterable or not, we must
+			# unpack it's value (when **kwargs is request.form, some values
+			# will be a 1-element list)
+			if hasattr(value, '__iter__') and not isinstance(value, str):
+				# the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+				value = value[0]
+
+			setattr(self, property, value)
+
+	def __repr__(self):
+		return str(self.name)
+
+class Teacher(db.Model):
+
+	__tablename__ = 'Teacher'
+
+	id = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(150), unique=False)
+	email = db.Column(db.String(255), unique=True)
+
+	def __init__(self, **kwargs):
+		for property, value in kwargs.items():
+			# depending on whether value is an iterable or not, we must
+			# unpack it's value (when **kwargs is request.form, some values
+			# will be a 1-element list)
+			if hasattr(value, '__iter__') and not isinstance(value, str):
+				# the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+				value = value[0]
+
+			setattr(self, property, value)
+
+	def __repr__(self):
+		return str(f"{self.name}, {self.email}")
+
+class Course(db.Model):
+
+	__tablename__ = 'Course'
+
+	id = db.Column(db.Integer, primary_key=True)
+	matter_id = db.Column(db.Integer, primary_key=False)
+	module_id = db.Column(db.Integer, primary_key=False)
+	teacher_id = db.Column(db.Integer, primary_key=False)
+	start_date = db.Column(db.Date)
+	end_date = db.Column(db.Date)
+
+	def __init__(self, **kwargs):
+		for property, value in kwargs.items():
+			# depending on whether value is an iterable or not, we must
+			# unpack it's value (when **kwargs is request.form, some values
+			# will be a 1-element list)
+			if hasattr(value, '__iter__') and not isinstance(value, str):
+				# the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+				value = value[0]
+
+			setattr(self, property, value)
+
+	def __repr__(self):
+		return str(f"{self.role}, {self.dni}")
+
+class AttendanceList(db.Model):
+
+	__tablename__ = 'Attendance List'
+
+	id = db.Column(db.Integer, primary_key=True)
+	course_id = db.Column(db.Integer)
+	student_id = db.Column(db.Integer)
+	status = db.Column(db.String(30))
+
+	def __init__(self, **kwargs):
+		for property, value in kwargs.items():
+			# depending on whether value is an iterable or not, we must
+			# unpack it's value (when **kwargs is request.form, some values
+			# will be a 1-element list)
+			if hasattr(value, '__iter__') and not isinstance(value, str):
+				# the ,= unpack of a singleton fails PEP8 (travis flake8 test)
+				value = value[0]
+
+			setattr(self, property, value)
+
+	def __repr__(self):
+		return str(self.id)
+
 def createRecord(arg):
 	try:
 		db.session.add(arg)

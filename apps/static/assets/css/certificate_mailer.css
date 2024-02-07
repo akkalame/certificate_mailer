@@ -1,0 +1,13 @@
+.justify-end{ justify-content: flex-end;}
+.padd-h-10{padding: 0px 10px;}
+
+.btn-link.btn.btn-outline-secondary:hover {
+    color: #fff;
+}
+.btn-link.btn.btn-outline-secondary{
+    color: #6c757d;
+}
+.btn-link.btn.btn-tab{
+    border-bottom: 0px !important;
+    border-radius: 3px !important;
+}

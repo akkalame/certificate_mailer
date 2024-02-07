@@ -1,6 +1,6 @@
 
 from datetime import datetime
-import os, platform
+import os, platform, random
 from pathlib import Path
 import socket
 import webbrowser
@@ -49,3 +49,15 @@ def get_explorer_command(system):
 		return "explorer"
 	elif system == "Linux":
 		return "xdg-open"
+
+def generate_file_name(txt=""):
+	txt = txt.lower().replace(" ", "_")
+	return txt+"_"+generate_code(6)
+
+def generate_code(length):
+	digitos = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	code = ""
+	for i in range(length):
+		idx = random.randint(0,len(digitos))
+		code += digitos[idx:idx+1]
+	return code

@@ -93,7 +93,6 @@ class InstalledAppFlowExtend(InstalledAppFlow):
 		)
 		self.redirect_uri = redirect_uri_format.format(bind_addr or host, local_server.server_port)
 		auth_url, _ = self.authorization_url(**kwargs)
-		print("redirect uri", self.redirect_uri)
 		if open_browser:
 			webbrowser.open(auth_url, new=1, autoraise=True)
 
@@ -134,17 +133,14 @@ class GoogleCon():
 
 
 	def load_creds(self, tokenInfo={}):
-		print("tokeninfo",tokenInfo)
 		creds = None
 		if tokenInfo:
 			creds = Credentials.from_authorized_user_info(tokenInfo, self.SCOPES)
-		
-		print("creds valid",creds.valid)
 		# If there are no (valid) credentials available, let the user log in.
 		if not creds or not creds.valid:
 			if creds and creds.expired and creds.refresh_token:
-				print("refreshing creds")
 				creds.refresh(Request())
+				self.gCreds = creds
 			else:
 				self.get_flow()
 				if DEVELOPER_MODE:

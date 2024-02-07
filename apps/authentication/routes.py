@@ -30,7 +30,6 @@ def route_default():
 def login():
     login_form = LoginForm(request.form)
     if 'login' in request.form:
-
         # read form data
         username = request.form['username']
         password = request.form['password']

@@ -1,0 +1,360 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Tables {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+	<link rel="stylesheet" href="/static/assets/css/certificate_mailer.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+  <!-- Content Wrapper. Contains page content -->
+  <div class="content-wrapper">
+	<!-- Content Header (Page header) -->
+	<section class="content-header">
+	  <div class="container-fluid">
+		<div class="row mb-2">
+		  <div class="col-sm-6">
+			<h1>Estudante </h1>
+		  </div>
+		  <div class="col-sm-6">
+			<ol class="breadcrumb float-sm-right">
+			  <li class="breadcrumb-item"><a href="#">Home</a></li>
+			  <li class="breadcrumb-item active">Estudante</li>
+			</ol>
+		  </div>
+		</div>
+	  </div><!-- /.container-fluid -->
+	</section>
+
+	<!-- Main content -->
+	<section class="content">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-4">
+					<div class="row">
+						<div class="col-12 text-right">
+							<a href="#" class="btn-link btn btn-sm btn-outline-secondary btn-tab">Importação</a>
+							
+						</div>
+					</div>
+					<div class="card card-primary">
+						
+						<form id="studentForm">
+							<div class="card-body">
+								<p class="text-center text-danger" id="studentMsgForm"></p>
+								<input type="hidden" class="form-control" id="studentId" aria-describedby="studentId">
+								<div class="form-group">
+									<label for="studentName" class="form-label">Nome completo</label>
+									<input type="text" class="form-control" id="studentName" aria-describedby="StudentName">
+								</div>
+								<div class="form-group">
+									<label for="studentDni" class="form-label">DNI</label>
+									<input type="text" class="form-control" id="studentDni" aria-describedby="studentDni">
+								</div>
+								<div class="form-group">
+									<label for="studentEmail" class="form-label">Email</label>
+									<input type="email" class="form-control" id="studentEmail" aria-describedby="studentEmail">
+								</div>
+							</div>
+							<!-- /.card-body -->
+			
+							<div class="card-footer">
+								<button class="btn btn-primary" type="button" id="btnMakeStudent">Criar</button>
+							</div>
+						</form>	
+					</div>
+				</div>
+
+				<div class="col-8">
+					<div class="card card-primary">
+						<div class="card-body p-0">
+							<div class="card-header">
+								<h3 class="card-title">Lista de alunos</h3>
+								<div class="card-tools">
+									<a class="btn-link float-right padd-h-10"  href="#" role="button" id="refreshStudentTable">
+										<i class="fas fa-sync-alt"></i>
+									</a>
+									<ul class="pagination pagination-sm" id="paginationStudentList">
+										<li class="page-item"><a class="page-link btn-link" href="#" data-text="lq">&laquo;</a></li>
+										<li class="page-item active"><a class="page-link btn-link" href="#" data-text="page">1</a></li>
+										<li class="page-item"><a class="page-link btn-link" href="#" data-text="page">2</a></li>
+										<li class="page-item"><a class="page-link btn-link" href="#" data-text="page">3</a></li>
+										<li class="page-item"><a class="page-link btn-link" href="#" data-text="rq">&raquo;</a></li>
+									</ul>
+								</div> 
+							</div>
+							<table class="table" id="studentList">
+								<thead>
+									<tr>
+										<th style="width: 10px">#</th>
+										<th>Nome</th>
+										<th>DNI</th>
+										<th>E-mail</th>
+										<th>Código</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+							<div class="row">
+								<div class="col-sm-12 col-md-5"></div>
+								<div class="col-sm-12 col-md-7">
+									<div class="dataTables_paginate paging_simple_numbers">
+										<ul class="pagination" id="limitRecordStudentList">
+											<li class="paginate_button page-item active">
+												<a href="#" aria-controls="list_students" data-dt-idx="20" role="button" tabindex="0" class="page-link btn-link">20</a>
+											</li>
+											<li class="paginate_button page-item ">
+												<a href="#" aria-controls="list_students" data-dt-idx="100" role="button" tabindex="1" class="page-link btn-link">100</a>
+											</li>
+											<li class="paginate_button page-item ">
+												<a href="#" aria-controls="list_students" data-dt-idx="500" role="button" tabindex="2" class="page-link btn-link">500</a>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+			</div>
+			
+	  </div><!-- /.container-fluid -->
+	</section>
+	<!-- /.content -->
+  </div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  
+	<script type="text/javascript">
+		let argSendData = {data:{}, callback:(response)=>{}, method:"POST", url:"/{{ segment }}"};
+
+		$(function(){
+			$("#btnMakeStudent").on("click", makeStudent);
+			$("#refreshStudentTable").on("click", refreshStudentTable);
+			refreshStudentTable();
+
+			paginationStudentListEvent();
+			limitRecordStudentListEvent();
+		});
+
+		function makeStudent(){
+			$("#studentMsgForm").text("");
+			let name = $("#studentName").val();
+			let dni = $("#studentDni").val();
+			let email = $("#studentEmail").val();
+			let _id = $("studentId").val() || null;
+
+			if (name && name !== "" && email && email !== ""){
+				let data = {
+					name:name,
+					dni:dni,
+					id:_id,
+					email:email
+				};
+				let args = JSON.parse(JSON.stringify(argSendData));
+				args.data = data;
+				args.callback = callbackStudentForm;
+				sendData(args);
+			}	
+		}
+		
+		function setMsgForm(msg, ide){
+			let e = $(ide);
+			e.text(msg)
+		}
+
+		function callbackStudentForm(response){
+			if (response !== ""){
+				setMsgForm(response, "#studentMsgForm");
+			}else{
+				refreshStudentTable();
+				$("#studentForm").find("input").val("");
+			}
+		}
+
+		function refreshStudentTable(){
+			let limit = $("#limitRecordStudentList").find("li.active a").text();
+			let offset = parseInt($("#paginationStudentList").find("li.active a").text()) - 1;
+			let data = {offset:offset, limit:limit};
+			let args = JSON.parse(JSON.stringify(argSendData));
+			args.url = "/data/{{segment}}";
+			args.callback = callbackStudentTable;
+			args.data = data
+			sendData(args);
+		}
+		
+		function callbackStudentTable(response){
+			refreshPaginationStudentList(response.index_page, response.pages);			
+
+			let students = response.data;
+			let tbody = $("#studentList tbody");
+			tbody.empty();
+			let tr, btn;
+			for (let i=0;i<students.length;i++){
+				tr = $(`<tr id="student_item_${students[i].id}"></tr>`).appendTo(tbody);
+				$(`<td>${i+1}</td>`).appendTo(tr);
+				$(`<td name="name">${students[i].name}</td>`).appendTo(tr);
+				$(`<td name="dni">${students[i].dni}</td>`).appendTo(tr);
+				$(`<td name="email">${students[i].email}</td>`).appendTo(tr);
+				$(`<td name="code"><a href="#" class="btn-link" onclick="copy2Clip(this.textContent)">${students[i].code}</a></td>`).appendTo(tr);
+				btn = $(`<td><button class="btn btn-primary">Editar</button></td>`).appendTo(tr);
+				btn.on("click",  function(){editStudent(students[i].id)});
+
+			}
+		}
+		
+		function refreshPaginationStudentList(index_page, pages){
+			let pagination = $("#paginationStudentList");
+			pagination.empty();
+			if (index_page !== 1){
+				$(`<li class="page-item"><a class="page-link btn-link" href="#" data-text="lq">&laquo;</a></li>`).appendTo(pagination)
+			}
+			
+			let pagesNumb = [1];
+			let nMidPages = pages - 2 > 3 ? 3:pages - 2;
+			
+			for (let i=1;i<=nMidPages;i++){
+				let p;
+				if (index_page == 1 || index_page == 2){
+					p = i+1;
+				}else if (index_page == pages){
+					p = pages - i;
+				}else if (index_page == pages-1){
+					p = index_page-nMidPages+i;
+				}else{
+					p = index_page-2+i;
+				}
+				pagesNumb.push(p);
+			}
+			if (pages > 1)
+				pagesNumb.push(pages);
+
+			pagesNumb.forEach( (value) => {
+				let extraClass = "";
+				if (index_page == value)
+					extraClass = "active"
+				$(`<li class="page-item ${extraClass}"><a class="page-link btn-link" href="#" data-text="page">${value}</a></li>`).appendTo(pagination);
+			} )
+			if (index_page !== pages){
+				$(`<li class="page-item"><a class="page-link btn-link" href="#" data-text="rq">&raquo;</a></li>`).appendTo(pagination)
+			}
+			paginationStudentListEvent();
+			
+		}
+
+		function paginationStudentListEvent(){
+			let pagination = $("#paginationStudentList");
+			pagination.find("a").on("click", (e) => {
+				let ee = $(e.currentTarget);
+				let offset;
+				if (ee.attr("data-text") == "rq"){
+					offset = parseInt(pagination.find("li.active a").text()) + 1; 
+					pagination.find("li.active a").text(offset);
+				}else if (ee.attr("data-text") == "lq"){
+					offset = parseInt(pagination.find("li.active a").text()) - 1;
+					pagination.find("li.active a").text(offset);
+				}else{
+					offset = parseInt(ee.text());
+					ee.text(offset);
+					pagination.find("li.active").removeClass("active");
+					ee.parent().addClass("active");
+				}
+				
+				refreshStudentTable();
+			});
+		}
+		
+		function limitRecordStudentListEvent(){
+			let pagination = $("#limitRecordStudentList");
+			pagination.find("a").on("click", (e) => {
+				let ee = $(e.currentTarget);
+				pagination.find("li.active").removeClass("active");
+				ee.parent().addClass("active");
+				refreshStudentTable();
+			});
+			
+		}
+
+		function editStudent(studentId){
+			let rowStudent = $(`#student_item_${studentId}`);
+			let name = rowStudent.find(`td[name='name']`).text();
+			let dni = rowStudent.find("td[name='dni']").text();
+			let email = rowStudent.find("td[name='email']").text();
+
+			let options = {
+				title: "Editar usuário",
+				confirm: (formData) => {
+					let args = JSON.parse(JSON.stringify(argSendData));
+					let data = {};
+					$.each(formData, function(idx, r){
+						data[r.name] = r.value;
+					});
+					args.data = data;
+					args.callback = function(response){
+						//$(`div[data-id='editar_usuário'][type='form']`).modal("dispose");
+						refreshStudentTable();
+						
+					};
+					sendData(args);
+				},
+				fields: [
+					{
+						label: "",
+						content: `<input type="hidden" class="form-control" name="id" value="${studentId}">`
+					},
+					{
+						label: "Nome",
+						content: `<input type="text" class="form-control" name="name" value="${name}">`
+					},
+					{
+						label: "DNI",
+						content: `<input type="text" class="form-control" name="dni" value="${dni}">`
+					},
+					{
+						label: "Email",
+						content: `<input type="text" class="form-control" name="email" value="${email}">`
+					}
+				]
+			}
+			modal_form(options);
+		}
+
+
+		function sendData(arg) {
+			$.ajax({
+				url: arg.url,
+				type: arg.method,
+				data: arg.data,
+				success: function(response){
+					arg.callback(response);
+					
+					//location.reload();
+					//$("#responseLbl").text( response.response);
+
+				},
+				error: function(error){
+					console.log("error", error);
+				},
+			});
+		}
+	</script>
+{% endblock javascripts %}

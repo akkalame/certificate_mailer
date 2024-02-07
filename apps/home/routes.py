@@ -23,7 +23,9 @@ from apps.controllers import (
 	update_settings,
 	listCustomFonts,
 	update_user,
-	updateGOAT
+	updateGOAT,
+	update_student,
+	listStudent
 )
 from flask import render_template, request, session
 from flask_login import (
@@ -33,6 +35,7 @@ from flask_login import (
 from apps import socket_io_events as ioe
 from jinja2 import TemplateNotFound
 import json
+from math import ceil
 
 @blueprint.route('/index')
 @login_required
@@ -58,8 +61,8 @@ def google_oauth2():
 		else:
 			msg = result
 	start_url = request.url.split("?")[0]
-	#ioe.remove_tab_with_url(start_url)
-	#ioe.msgprint(msg)
+	ioe.remove_tab_with_url(start_url)
+	ioe.msgprint(msg)
 	return "Proceso Completado, ya puede cerrar esta pestaña." if not result else result
 
 @blueprint.route('/<template>', methods=['GET', 'POST'])
@@ -80,7 +83,7 @@ def route_template(template):
 		# Serve the file (if exists) from app/templates/home/FILE.html
 		if request.method == 'POST':
 			data_form = _dict(request.form)
-			r = set_data_for_segment(segment, data_form)
+			r = set_data_for_segment(segment, data_form) or ""
 
 		if request.method == "GET":
 			r = render_template("home/" + template, segment=segment, data=data, user_roles=user_roles_name)
@@ -93,9 +96,26 @@ def route_template(template):
 		raise e
 		#return render_template('home/page-500.html'), 500
 
+@blueprint.route('/data/<template>', methods=['POST'])
+@login_required
+def route_data(template):
+	args = _dict(request.args) or current_user_to_arg(current_user)
+	try:
+		data = _dict(request.form)
+		# Detect the current page
+		segment = get_segment(request)
+		if segment == "student":
+			records, count = listStudent(**data)
+			pages = ceil(count/int(data.limit))
+			current_page = int(data.offset)+1
+			return _dict(data=records, pages=pages, index_page=current_page)
 
+	except TemplateNotFound:
+		return render_template('home/page-404.html'), 404
 
-
+	except Exception as e:
+		raise e
+		#return render_template('home/page-500.html'), 500
 
 # Helper - Extract current page name from request
 def get_segment(request):
@@ -124,13 +144,11 @@ def get_data_from_segment(segment, args=_dict()):
 				r.active = True
 		return {"user": user, "user_roles": roles}
 	elif segment == "gencert":
-		
 		data = _dict(
 			credenciales=get_tokens(), 
 			plantillas=get_cert_templates(),
 			emailAccounts=get_email_accounts(),
-			emailTemplates=listEmailTemplate(),
-			
+			emailTemplates=listEmailTemplate(),	
 		)
 		return data 
 	elif segment == "settings":
@@ -156,6 +174,8 @@ def set_data_for_segment(segment, data_form):
 			update_settings(data_form)
 		elif segment == "users":
 			update_user(data_form)
+		elif segment == "student":
+			return update_student(data_form)
 
 		return _dict()
 	except Exception as e:

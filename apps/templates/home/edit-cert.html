@@ -44,14 +44,26 @@
 			<div id="tool-menu-section">
 				<div class="tools-menu">
 					<div class="row" >
-						<div class="col-1">Font Size (px)<input class="form-control" type="number" id="font_size" min="1" value="30"></div>
 						<div class="col-2">
-							Font
+							<label for="">Font Size</label>
+							<div class="input-group my-colorpicker2">
+								<input class="form-control" type="number" id="font_size" min="1" value="30">
+			
+								<div class="input-group-append">
+								  <span class="input-group-text">px</span>
+								</div>
+							  </div>
+							
+							
+						</div>
+						<div class="col-2">
+							<label for="">Font</label>
 							<select id="font_select" class="custom-select">
 								{% for cf in data['custom_fonts'] %}
 									<option value="{{cf}}">{{cf.title()}}</option>
 								{% endfor %}
 							</select>
+							
 						</div>
 						<div class="col-1 align-items-b">
 							<div class="btn-group">
@@ -70,7 +82,7 @@
 							</button>
 						</div>
 						<div class="col-3">
-							Modelo
+							<label for="">Modelo</label>
 							<select id="template_select" class="custom-select">
 								<option selected></option>
 								{% for plantilla in data['plantillas'] %}

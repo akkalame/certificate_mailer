@@ -1,12 +1,18 @@
 from flask import session
 
-from apps.certificate_mailer import utils
 from apps.certificate_mailer.googlecon import GoogleCon
-from apps.certificate_mailer.utils import today, mkdir
+from apps.certificate_mailer.utils import today, mkdir, sheet_id_from_link, generate_file_name, generate_code
 from apps.certificate_mailer.email_controller import send_smtp, smtp_service
 from apps import _dict
-from apps.controllers import listEmailTemplate, listEmailAccount, listEmailServer, listGoogleTokens, current_user_to_arg
-import json, glob, os, random, base64
+from apps.controllers import (
+	listEmailTemplate, 
+	listEmailAccount, 
+	listEmailServer, 
+	listGoogleTokens, 
+	current_user_to_arg,
+	updateGOAT
+)
+import json, glob, os
 from pathlib import Path
 from weasyprint import HTML, CSS, Document
 from weasyprint.text.fonts import FontConfiguration
@@ -14,8 +20,8 @@ from copy import deepcopy
 from flask_login import (
 	current_user
 )
+from apps import socket_io_events as ioe
 
-import json
 
 
 
@@ -30,15 +36,25 @@ class Main():
 	def connect_to_google(self,tokenName):
 		user = current_user_to_arg(current_user)
 		if user:
-			print("connecting to google\n")
 			googleToken = listGoogleTokens({"user_id": user.id, "name": tokenName})
-			print("googletoken", googleToken)
 			googleTokenInfo = {}
+			
 			if googleToken:
 				googleTokenInfo = googleToken[0]
-			#print(googleTokenInfo)
 			self.googleCon = GoogleCon()
 			self.googleCon.load_creds(googleTokenInfo)
+
+			# actualizo el token en la db
+			if self.googleCon.gCreds:
+				token = self.googleCon.gCreds.to_json()
+				if isinstance(token, str):
+					token = json.loads(token)
+				token = _dict(token)
+				if token.token != googleTokenInfo.token:
+					user = current_user_to_arg(current_user)
+					token.user_id = user.id
+					token.name = tokenName
+					updateGOAT(token)
 			
 			return self.googleCon.gCreds
 		raise "User not connected"
@@ -98,17 +114,18 @@ class Main():
 		css = CSS(string=str(css_content), font_config=font_config)
 
 		for idx, d in enumerate(self.toCertificate):
+			
 			d.name = d.name.lower().title()
 			tpl = deepcopy(baseHtml)
 			tpl = tpl.replace("${name}", d.name)
 			
 			html = HTML(string=tpl)
-			print("html tpl ini")
 			filename = get_name_pdf(d, pathToSave)
 			filePath = pathToSave+filename
-			print("path to save",filePath)
 			try:
 				html.write_pdf(f"{filePath}.pdf", stylesheets=[css], font_config=font_config)
+				ioe.progress(idx+1, len(self.toCertificate), title="Generacíon de Certificados", 
+				 description=f"{d.name}. {idx+1}/{len(self.toCertificate)}")
 			except Exception as e:
 				raise e
 
@@ -117,9 +134,6 @@ class Main():
 				dCopy.file = f"{filePath}.pdf"
 				self.toSend.append(dCopy)
 
-			#if os.path.exists(filePath+".pdf"):
-			#	os.remove(filePath+".docx")
-		#cleanOutputs(pathToSave)
 
 	def set_just_send(self):
 		pathToSave = validate_path_to_save(None)
@@ -141,7 +155,9 @@ class Main():
 		sents = 0
 		emailsSent = []
 		emailsUnsent = []
-		for d in self.toSend:
+		for idx, d in enumerate(self.toSend):
+			ioe.progress(idx+1, len(self.toSend), title="Envío de Certificados", 
+				description=f"{d.name}. {idx+1}/{len(self.toSend)}")
 			if Path(d.file).exists():
 				try:
 					sub = subject.replace("{{name}}", d.name)
@@ -151,9 +167,15 @@ class Main():
 					sents += 1
 					emailsSent.append(d.email)
 				except Exception as e:
-					emailsUnsent.append(d.email)
+					emailsUnsent.append(_dict(email=d.email, name=d.name))
 
-		return f"{sents} e-mails enviados"
+		ioe.msgprint(f"{sents} e-mails enviados")
+		
+		if emailsUnsent:
+			msg = ""
+			for e in emailsUnsent:
+				msg += f"{e.name}, {e.email} \n"
+			ioe.msgprint(msg)
 
 	def get_smtp_service(self, emailAccount):
 		query = listEmailAccount(filters={"email": emailAccount})
@@ -170,28 +192,31 @@ class Main():
 
 
 def make_process(data):
-	main = Main()
-	creds = main.connect_to_google(data.credentialName)
-	if creds:
-		sheetId = utils.sheet_id_from_link(data.spreadLink)
-		rangeName = f"{data.cell1.upper()}:{data.cell2.upper()}"
-		rows = main.get_sheet_values(sheetId, rangeName)
+	try:
+		main = Main()
+		creds = main.connect_to_google(data.credentialName)
+		if creds:
+			sheetId = sheet_id_from_link(data.spreadLink)
+			rangeName = f"{data.cell1.upper()}:{data.cell2.upper()}"
+			rows = main.get_sheet_values(sheetId, rangeName)
 
-		rows = main.rows_to_obj(rows, int(data.cell1[1:]))
-		main.availables_to_certificate(rows, data.faltaMax)
-		if not int(data.justSend):
-			main.generate_cert(data.templatePath)
+			rows = main.rows_to_obj(rows, int(data.cell1[1:]))
+			main.availables_to_certificate(rows, data.faltaMax)
+			if not int(data.justSend):
+				main.generate_cert(data.templatePath)
+			else:
+				main.set_just_send()
+
+			if int(data.sendEmail):
+				main.send_emails(data.subject, data.body, data.emailAccount,
+								data.useEmailTp,
+								data.emailTemplate)
+
+			#return f"{len(main.toCertificate)} certificados generados"
 		else:
-			main.set_just_send()
-
-		if int(data.sendEmail):
-			return main.send_emails(data.subject, data.body, data.emailAccount,
-							data.useEmailTp,
-							data.emailTemplate)
-
-		return f"{len(main.toCertificate)} certificados generados"
-	else:
-		session['credential_filename'] = data.credentialName
+			session['credential_filename'] = data.credentialName
+	except Exception as e:
+		raise e
 
 def validate_path_to_save(pathToSave):
 	if not pathToSave:
@@ -209,17 +234,7 @@ def get_name_pdf(d, pathToSave=None):
 
 	return filename
 
-def generate_file_name(txt=""):
-	txt = txt.lower().replace(" ", "_")
-	return txt+"_"+generate_code(6)
 
-def generate_code(length):
-	digitos = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-	code = ""
-	for i in range(length):
-		idx = random.randint(0,len(digitos))
-		code += digitos[idx:idx+1]
-	return code
 
 
 def cleanOutputs(path, extension='docx'):
