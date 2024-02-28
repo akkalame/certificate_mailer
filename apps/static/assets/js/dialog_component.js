@@ -67,12 +67,20 @@ function modal_form(options={}){
 	let modalBody = modal.find(".modal-body");
 	modalBody.empty();
 	let form = $(`<form id="form_${dataId}"></form>`).appendTo(modalBody);
-	console.log(form);
-	let row;
+	form.submit(function(event) {
+		event.preventDefault();
+	  });
+	let row, fd;
 	$.each(options.fields || [], function(index, field){
 		row = $(`<div class="row"></div>`).appendTo(form);
 		$(`<label>${field.label}</label>`).appendTo(row);
-		$(field.content).appendTo(row);
+		fd = $(field.content).appendTo(row);
+		for (var key in field) {
+			if (key !== "content" && key !== "label"){
+				fd.on(key, field[key]);
+			}
+		}
+
 	});
 	modal.modal("show");
 }

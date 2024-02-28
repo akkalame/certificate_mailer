@@ -45,7 +45,7 @@
 				<div class="col-4">
 					<div class="row">
 						<div class="col-12 text-right">
-							<a href="#" class="btn-link btn btn-sm btn-outline-secondary btn-tab">Importação</a>
+							<a href="#" class="btn-link btn btn-sm btn-outline-secondary btn-tab" id="import">Importação</a>
 							
 						</div>
 					</div>
@@ -87,11 +87,6 @@
 										<i class="fas fa-sync-alt"></i>
 									</a>
 									<ul class="pagination pagination-sm" id="paginationStudentList">
-										<li class="page-item"><a class="page-link btn-link" href="#" data-text="lq">&laquo;</a></li>
-										<li class="page-item active"><a class="page-link btn-link" href="#" data-text="page">1</a></li>
-										<li class="page-item"><a class="page-link btn-link" href="#" data-text="page">2</a></li>
-										<li class="page-item"><a class="page-link btn-link" href="#" data-text="page">3</a></li>
-										<li class="page-item"><a class="page-link btn-link" href="#" data-text="rq">&raquo;</a></li>
 									</ul>
 								</div> 
 							</div>
@@ -150,6 +145,7 @@
 		$(function(){
 			$("#btnMakeStudent").on("click", makeStudent);
 			$("#refreshStudentTable").on("click", refreshStudentTable);
+			$("#import").on("click", importStudents);
 			refreshStudentTable();
 
 			paginationStudentListEvent();
@@ -193,7 +189,7 @@
 
 		function refreshStudentTable(){
 			let limit = $("#limitRecordStudentList").find("li.active a").text();
-			let offset = parseInt($("#paginationStudentList").find("li.active a").text()) - 1;
+			let offset = (parseInt($("#paginationStudentList").find("li.active a").text()) || 1) - 1;
 			let data = {offset:offset, limit:limit};
 			let args = JSON.parse(JSON.stringify(argSendData));
 			args.url = "/data/{{segment}}";
@@ -203,6 +199,7 @@
 		}
 		
 		function callbackStudentTable(response){
+			console.log(response);
 			refreshPaginationStudentList(response.index_page, response.pages);			
 
 			let students = response.data;
@@ -223,6 +220,7 @@
 		}
 		
 		function refreshPaginationStudentList(index_page, pages){
+			
 			let pagination = $("#paginationStudentList");
 			pagination.empty();
 			if (index_page !== 1){
@@ -301,7 +299,7 @@
 			let email = rowStudent.find("td[name='email']").text();
 
 			let options = {
-				title: "Editar usuário",
+				title: "Editar Estudante",
 				confirm: (formData) => {
 					let args = JSON.parse(JSON.stringify(argSendData));
 					let data = {};
@@ -332,6 +330,34 @@
 					{
 						label: "Email",
 						content: `<input type="text" class="form-control" name="email" value="${email}">`
+					}
+				]
+			}
+			modal_form(options);
+		}
+
+		function importStudents(){
+			let options = {
+				title: "Importar alunos",
+				confirm: (formData) => {
+					let args = JSON.parse(JSON.stringify(argSendData));
+					let data = {};
+					$.each(formData, function(idx, r){
+						data[r.name] = r.value;
+					});
+					args.data = data;
+					args.callback = function(response){
+						//$(`div[data-id='editar_usuário'][type='form']`).modal("dispose");
+						refreshStudentTable();
+						
+					};
+					sendData(args);
+				},
+				fields: [
+					{
+						label: "",
+						content: `<button class="btn btn-default">Download do modelo</button>`,
+						click: function(){window.location.href = "/static/files/student_import_template.xlsx";}
 					}
 				]
 			}
