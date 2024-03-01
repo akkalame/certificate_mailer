@@ -16,7 +16,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 DB_NAME = 'db.sqlite3'
-DEVELOPER_MODE = True
+DEVELOPER_MODE = False
 
 db = SQLAlchemy()
 login_manager = LoginManager()

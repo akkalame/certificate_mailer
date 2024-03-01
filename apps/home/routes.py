@@ -49,20 +49,20 @@ def index():
 
 @blueprint.route("/login/oauth2/code/google", methods=['GET', 'POST'])
 def google_oauth2():
-	print("recibiendo google token")
+	#print("recibiendo google token")
 	msg = "Credenciales no guardadas, por favor reintente el proceso"
-	#tokenName = session['credential_filename']
+	tokenName = session['credential_filename']
 	user = current_user_to_arg(current_user)
-	r = listSessionVariables({"user_id": user.id})
-	variables = _dict()
-	if r:
-		variables = r[0].json
-	if "credential_name" in variables: #tokenName:
-		creds = json.loads(GoogleCon().fetch_token(request.url, variables.credential_name).to_json())
+	#r = listSessionVariables({"user_id": user.id})
+	#variables = _dict()
+	#if r:
+	#	variables = r[0].json
+	if tokenName:#"credential_name" in variables: #tokenName:
+		creds = json.loads(GoogleCon().fetch_token(request.url, tokenName).to_json())
 		
 		token = _dict(creds)
 		token.user_id = user.id
-		token.name = variables.credential_name
+		token.name = tokenName
 		result = updateGOAT(token)
 		if not result:
 			msg = "Credenciales Guardadas con exito, por favor ejecute el proceso de generar los certificados de nuevo."
