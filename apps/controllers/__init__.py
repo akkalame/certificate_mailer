@@ -217,6 +217,7 @@ def updateGOAT(data):
 	#		return "La cuenta google que intenta vincular ya se encuentra en uso con otro usuario."
 
 	if user_tokens:
+		print("es token usado")
 		filters = {"name":data.name} #{"user_id": data.user_id, "client_id": data.client_id}
 		record = GoogleOAuthToken.query.filter_by(**filters).first()
 		record.token = data.token
@@ -226,6 +227,7 @@ def updateGOAT(data):
 			record.refresh_token = data.refresh_token
 		db.session.commit()
 	else:
+		print("token no usado")
 		obj = GoogleOAuthToken(**data)
 		createRecord(obj)
 
