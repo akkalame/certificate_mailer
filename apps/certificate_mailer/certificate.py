@@ -218,8 +218,9 @@ def make_process(data):
 
 			#return f"{len(main.toCertificate)} certificados generados"
 		else:
+			print("colocando variable de sesion")
 			user = current_user_to_arg(current_user)
-			updateSessionVariable({"user_id": user.id, "json":{"credential_name":data.credentialName}})
+			updateSessionVariable(_dict({"user_id": user.id, "json":{"credential_name":data.credentialName}}))
 			#session['credential_filename'] = data.credentialName
 	except Exception as e:
 		raise e

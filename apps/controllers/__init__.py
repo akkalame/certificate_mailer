@@ -157,19 +157,21 @@ def listSessionVariables(filters={}):
 	)
 	lista = list2_dict(query, ["id", "user_id", "json"])
 	for l in lista:
-		l.json = json.loads(l.json)
+		l.json = _dict(json.loads(l.json))
 	return lista
 
 def updateSessionVariable(data):
 	variable = listSessionVariables({"user_id": data.user_id})
 	if variable:
 		record = SessionVariable.query.filter_by(user_id=data.user_id).first()
-		json_content = deepcopy(variable.json)
+		json_content = deepcopy(variable[0].json)
 		for k in data.json:
 			json_content[k] = data.json[k]
 		record.json = json.dumps(json_content)
+		print(json_content)
 		db.session.commit()
 	else:
+		data.json = json.dumps(data.json)
 		obj = SessionVariable(**data)
 		createRecord(obj)
 

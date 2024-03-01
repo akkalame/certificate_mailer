@@ -50,29 +50,28 @@ def index():
 @blueprint.route("/login/oauth2/code/google", methods=['GET', 'POST'])
 def google_oauth2():
 	msg = "Credenciales no guardadas, por favor reintente el proceso"
-	tokenName = session['credential_filename']
-	if tokenName:
-		user = current_user_to_arg(current_user)
-		r = listSessionVariables({"user_id": user.id})
-		variables = _dict()
-		if r:
-			variables = json.loads(r[0].json)
-
+	#tokenName = session['credential_filename']
+	user = current_user_to_arg(current_user)
+	r = listSessionVariables({"user_id": user.id})
+	variables = _dict()
+	if r:
+		variables = r[0].json
+	if "credential_name" in variables: #tokenName:
 		creds = json.loads(GoogleCon().fetch_token(request.url, variables.credential_name).to_json())
 		
 		token = _dict(creds)
 		token.user_id = user.id
-		token.name = tokenName
+		token.name = variables.credential_name
 		result = updateGOAT(token)
 		if not result:
 			msg = "Credenciales Guardadas con exito, por favor ejecute el proceso de generar los certificados de nuevo."
 		else:
 			msg = result
-	start_url = request.url.split("?")[0]
-	ioe.remove_tab_with_url(start_url)
-	ioe.msgprint(msg)
-	return "Proceso Completado, ya puede cerrar esta pestaña." if not result else result
-
+		ioe.msgprint(msg)
+		return "Proceso Completado, ya puede cerrar esta pestaña." if not result else result
+	else:
+		return "No se ha podido guardar las credenciales porque falta nombre de guardado."
+	
 @blueprint.route('/<template>', methods=['GET', 'POST'])
 @login_required
 def route_template(template):
