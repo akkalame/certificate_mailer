@@ -137,7 +137,7 @@
 												</tr>
 											</thead>
 											<tbody>
-												{% for emailServer in data.email_servers %}
+												{% for emailServer in data['email_servers'] %}
 													<tr id="email_server_item_{{emailServer.server.replace('.', '_').replace('/', '').replace(':', '')}}">
 														<td>{{ emailServer.server }}</td>
 														<td>{{ emailServer.port }}</td>
