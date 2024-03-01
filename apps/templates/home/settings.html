@@ -99,6 +99,74 @@
 					<div class="container-fluid" style="justify-content: space-around;">
 						<div class="card card-primary">
 							<div class="card-header">
+								<h3 class="card-title">Cuenta de e-mail</h3>
+							</div>
+							<div class="row">
+								<div class="col-5">
+									<form id="email_account_form" action="">
+										<div class="card-body">
+											<div class="form-group">
+												<label for="email_name">Nome</label>
+												<input type="url" class="form-control" id="email_name" placeholder="Nome" name="email_name">
+											</div>
+											<div class="form-group">
+												<label for="emailServerSelect" class="form-label">Selecione uma conta SMTP</label>
+												<select class="custom-select" aria-label="SMTP Email Account" id="emailServerSelect">
+													{% for es in data.email_servers %}
+														<option value="{{ es.server }}">{{ es.server }}</option>
+													{% endfor %}
+												</select>
+											</div>
+											<div class="form-group">
+												<label for="email">Email</label>
+												<input type="email" class="form-control" id="email" placeholder="Email" name="email">
+											</div>
+											<div class="form-group">
+												<label for="password">Password</label>
+												<input type="password" class="form-control" id="password" placeholder="Password" name="password">
+											</div>
+												
+										</div>
+										<div class="card-footer">
+											<button  class="btn btn-primary" onclick="addEmailAccount()">Submit</button>
+										</div>
+									</form>
+								</div>
+								
+								<div class="col-7">
+									<div class="card-body table-responsive p-0" style="height: 300px;">
+										<table class="table table-head-fixed text-nowrap">
+											<thead>
+												<tr>
+													<th>Email</th>
+													<th>Name</th>
+													<th></th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for ea in data.email_accounts %}
+													<tr id="email_account_item{{ea.email.replace('.', '_').replace('/', '').replace(':', '').replace('@','_')}}">
+														<td>{{ ea.email }}</td>
+														<td>{{ ea.name }}</td>
+														<td><button class="btn btn-sm btn-danger remove" onclick="deleteEmailAccount('{{ea.email}}')">
+															<i class="fas fa-trash-alt"></i></button></td>
+													</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							
+							
+						</div>
+					</div><!-- /.container-fluid -->
+				</div>
+
+				<div class="col-12">
+					<div class="container-fluid" style="justify-content: space-around;">
+						<div class="card card-primary">
+							<div class="card-header">
 								<h3 class="card-title">Servidor de e-mail</h3>
 							</div>
 							<div class="row">
@@ -137,7 +205,7 @@
 												</tr>
 											</thead>
 											<tbody>
-												{% for emailServer in data['email_servers'] %}
+												{% for emailServer in data.email_servers %}
 													<tr id="email_server_item_{{emailServer.server.replace('.', '_').replace('/', '').replace(':', '')}}">
 														<td>{{ emailServer.server }}</td>
 														<td>{{ emailServer.port }}</td>
@@ -162,6 +230,8 @@
 						</div>
 					</div><!-- /.container-fluid -->
 				</div>
+
+				
 			</div>
 			
 		</section>
@@ -220,6 +290,31 @@
 			}
 			sendData(data);
 			$("#email_server_item_"+formatDomain(cfName)).remove();
+		}
+
+		function addEmailAccount(){
+			let emailName = $("#email_name").val();
+			let server = $("#emailServerSelect").val();
+			let email = $("#email").val();
+			let password = $("#password").val();
+			let data = {
+				type_request: "add_email_account",
+				name: emailName,
+				server: server,
+				email: email,
+				password: password
+			}
+			sendData(data, "email_account_form");
+		}
+
+		function deleteEmailAccount(cfName){
+			let data = {
+				type_request: "del_email_account",
+				email: cfName
+			}
+			console.log(data);
+			sendData(data);
+			$("#email_account_item"+formatDomain(cfName)).remove();
 		}
 
 		function sendData(data, formID=null, method="POST") {

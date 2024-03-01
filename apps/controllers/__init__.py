@@ -220,6 +220,15 @@ def update_settings(data_form):
 		record = db.session.query(EmailServer).filter_by(**data_form).first()
 		deleteRecord(record)
 		ioe.show_alert(_dict(title="Eliminacion Correcta"))
+	elif type_request == "add_email_account":
+		op = EmailAccount(**data_form)
+		result = createRecord(op)
+		if not result:
+			ioe.show_alert(_dict(title="Registro Exitoso"))
+	elif type_request == "del_email_account":
+		record = db.session.query(EmailAccount).filter_by(**data_form).first()
+		deleteRecord(record)
+		ioe.show_alert(_dict(title="Eliminacion Correcta"))
 
 def update_user(data_form):
 	type_request = data_form.type_request

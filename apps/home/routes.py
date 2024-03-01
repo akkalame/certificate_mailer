@@ -26,7 +26,8 @@ from apps.controllers import (
 	updateGOAT,
 	update_student,
 	listStudent,
-	listEmailServer
+	listEmailServer,
+	listEmailAccount
 )
 from flask import render_template, request, session
 from flask_login import (
@@ -155,7 +156,7 @@ def get_data_from_segment(segment, args=_dict()):
 	elif segment == "settings":
 		cf_list = [cf.name for cf in listCustomFonts()] or []
 		
-		return _dict(custom_fonts=cf_list, email_servers=listEmailServer())
+		return _dict(custom_fonts=cf_list, email_servers=listEmailServer(), email_accounts=listEmailAccount())
 	elif segment == "edit-cert":
 		cf_list = [cf.name for cf in listCustomFonts()] or []
 		return _dict(
