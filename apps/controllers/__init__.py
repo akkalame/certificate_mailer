@@ -8,13 +8,16 @@ from apps.home.models import (
 	EmailTemplate,
 	EmailServer,
 	CustomFonts,
-	Student
+	Student,
+	SessionVariable
 	)
 from apps import list2_dict, db, _dict
 from sqlalchemy import column
 from apps import socket_io_events as ioe
 from apps.controllers.builds import build_custom_fonts
 from apps.certificate_mailer.utils import generate_code
+import json
+from copy import deepcopy
 
 def listUsers(filters={}):
 	if filters:
@@ -141,6 +144,34 @@ def listStudent(filters={}, offset=0, limit=20):
 	query = query.with_entities(Student.id, Student.name, Student.email, Student.dni, Student.code).all()
 	
 	return list2_dict(query, ["id","name", "email", "dni", "code"]), count
+
+def listSessionVariables(filters={}):
+	query = db.session.query(SessionVariable)
+	if filters:
+		query.filter_by(**filters)
+
+	query = query.with_entities(
+		SessionVariable.id, 
+		SessionVariable.user_id,
+		SessionVariable.json
+	)
+	lista = list2_dict(query, ["id", "user_id", "json"])
+	for l in lista:
+		l.json = json.loads(l.json)
+	return lista
+
+def updateSessionVariable(data):
+	variable = listSessionVariables({"user_id": data.user_id})
+	if variable:
+		record = SessionVariable.query.filter_by(user_id=data.user_id).first()
+		json_content = deepcopy(variable.json)
+		for k in data.json:
+			json_content[k] = data.json[k]
+		record.json = json.dumps(json_content)
+		db.session.commit()
+	else:
+		obj = SessionVariable(**data)
+		createRecord(obj)
 
 def asignRole(data_form):
 	checked = int(data_form.checked)

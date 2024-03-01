@@ -10,7 +10,9 @@ from apps.controllers import (
 	listEmailServer, 
 	listGoogleTokens, 
 	current_user_to_arg,
-	updateGOAT
+	updateGOAT,
+	listSessionVariables,
+	updateSessionVariable
 )
 import json, glob, os
 from pathlib import Path
@@ -216,7 +218,9 @@ def make_process(data):
 
 			#return f"{len(main.toCertificate)} certificados generados"
 		else:
-			session['credential_filename'] = data.credentialName
+			user = current_user_to_arg(current_user)
+			updateSessionVariable({"user_id": user.id, "json":{"credential_name":data.credentialName}})
+			#session['credential_filename'] = data.credentialName
 	except Exception as e:
 		raise e
 

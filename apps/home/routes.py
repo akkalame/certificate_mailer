@@ -27,7 +27,8 @@ from apps.controllers import (
 	update_student,
 	listStudent,
 	listEmailServer,
-	listEmailAccount
+	listEmailAccount,
+	listSessionVariables
 )
 from flask import render_template, request, session
 from flask_login import (
@@ -52,7 +53,12 @@ def google_oauth2():
 	tokenName = session['credential_filename']
 	if tokenName:
 		user = current_user_to_arg(current_user)
-		creds = json.loads(GoogleCon().fetch_token(request.url, session['credential_filename']).to_json())
+		r = listSessionVariables({"user_id": user.id})
+		variables = _dict()
+		if r:
+			variables = json.loads(r[0].json)
+
+		creds = json.loads(GoogleCon().fetch_token(request.url, variables.credential_name).to_json())
 		
 		token = _dict(creds)
 		token.user_id = user.id
