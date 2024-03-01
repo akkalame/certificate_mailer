@@ -210,14 +210,14 @@ def current_user_to_arg(current):
 def updateGOAT(data):
 	print("actualizando GOAT")
 	data.scopes = ",".join(data.scopes)
-	user_tokens = listGoogleTokens({"user_id": data.user_id, "client_id": data.client_id})
+	user_tokens = listGoogleTokens({"name":data.name}) #{"user_id": data.user_id, "client_id": data.client_id})
 	# in case token link not exist with current user, check if link exist with another user
 	#if not user_tokens:
 	#	if listGoogleTokens({"client_id": data.client_id}):
 	#		return "La cuenta google que intenta vincular ya se encuentra en uso con otro usuario."
 
 	if user_tokens:
-		filters = {"user_id": data.user_id, "client_id": data.client_id}
+		filters = {"name":data.name} #{"user_id": data.user_id, "client_id": data.client_id}
 		record = GoogleOAuthToken.query.filter_by(**filters).first()
 		record.token = data.token
 		record.scopes = data.scopes
