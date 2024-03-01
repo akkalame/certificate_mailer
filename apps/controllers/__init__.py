@@ -212,9 +212,9 @@ def updateGOAT(data):
 	data.scopes = ",".join(data.scopes)
 	user_tokens = listGoogleTokens({"user_id": data.user_id, "client_id": data.client_id})
 	# in case token link not exist with current user, check if link exist with another user
-	if not user_tokens:
-		if listGoogleTokens({"client_id": data.client_id}):
-			return "La cuenta google que intenta vincular ya se encuentra en uso con otro usuario."
+	#if not user_tokens:
+	#	if listGoogleTokens({"client_id": data.client_id}):
+	#		return "La cuenta google que intenta vincular ya se encuentra en uso con otro usuario."
 
 	if user_tokens:
 		filters = {"user_id": data.user_id, "client_id": data.client_id}

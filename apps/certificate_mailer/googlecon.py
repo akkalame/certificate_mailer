@@ -158,8 +158,7 @@ class GoogleCon():
 
 		if DEVELOPER_MODE:
 			url = "https://redirectmeto.com/"+url
-		if "https" not in url:
-			url = url.replace("http", "https")
+		url = "https"+url.replace("https","").replace("http","")
 		redirect_uri = url.split("?")[0]
 		
 		self.get_flow()
