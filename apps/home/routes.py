@@ -49,6 +49,7 @@ def index():
 
 @blueprint.route("/login/oauth2/code/google", methods=['GET', 'POST'])
 def google_oauth2():
+	print("recibiendo google token")
 	msg = "Credenciales no guardadas, por favor reintente el proceso"
 	#tokenName = session['credential_filename']
 	user = current_user_to_arg(current_user)

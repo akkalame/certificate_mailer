@@ -208,6 +208,7 @@ def current_user_to_arg(current):
 	return {}
 
 def updateGOAT(data):
+	print("actualizando GOAT")
 	data.scopes = ",".join(data.scopes)
 	user_tokens = listGoogleTokens({"user_id": data.user_id, "client_id": data.client_id})
 	# in case token link not exist with current user, check if link exist with another user
