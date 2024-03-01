@@ -43,12 +43,13 @@ class GoogleOAuthToken(db.Model):
 
     __tablename__ = 'Google OAuth Token'
 
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer)
     name = db.Column(db.String(64))
     token = db.Column(db.String(300))
     refresh_token = db.Column(db.String(160))
     token_uri = db.Column(db.String(100))
-    client_id = db.Column(db.String(160), primary_key=True)
+    client_id = db.Column(db.String(160))
     client_secret = db.Column(db.String(100))
     scopes = db.Column(db.String(100))
     expiry = db.Column(db.String(35))
