@@ -175,7 +175,7 @@
 
 			let certName = $("#template_select").val();
 			if (!certName || certName == ""){
-				window.prompt("Nome do modelo");
+				certName = window.prompt("Nome do modelo");
 			}
 
 			if (certName !== null && certName !== "") {
@@ -349,6 +349,7 @@
 		}
 
 		function sendData(data, callback=null, method="POST") {
+			console.log("sending data", data)
 			$.ajax({
 				url:"/{{ segment }}",
 				type:method,

@@ -15,7 +15,7 @@ from flask_socketio import SocketIO
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-DB_NAME = 'certificate_mailer.sqlite3'
+DB_NAME = 'db.sqlite3'
 DEVELOPER_MODE = True
 
 db = SQLAlchemy()

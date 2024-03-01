@@ -6,6 +6,7 @@ $(function(){
 	});
 
 	socket.on("dialog", (data) =>{
+		
 		if (data.type == "progress"){
 			modal_progress(data);
 		}

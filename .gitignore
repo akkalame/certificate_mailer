@@ -37,4 +37,4 @@ apps/static/assets/.temp
 apps/certificate_mailer/tokens/
 apps/certificate_mailer/pdf/
 apps/certificate_mailer/kernel/
-
+apps/certificate_mailer/cert_template/

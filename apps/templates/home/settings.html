@@ -40,57 +40,130 @@
 
 		<!-- Main content -->
 		<section class="content">
-			<div class="container-fluid" style="display: flex; justify-content: space-around;">
-				<div class="card card-primary">
-					<div class="card-header">
-						<h3 class="card-title">Custom Fonts</h3>
-					</div>
-					<div class="row">
-						<div class="col-5">
-							<form id="custom_fonts_form" action="">
-								<div class="card-body">
-									<div class="form-group">
-										<label for="font_name">Name</label>
-										<input type="text" class="form-control" id="font_name" placeholder="Font Name" name="font_name">
-									</div>
-									<div class="form-group">
-										<label for="font_url">URL</label>
-										<input type="url" class="form-control" id="font_url" placeholder="URL" name="font_url">
-									</div>
-										
-								</div>
-								<div class="card-footer">
-									<button  class="btn btn-primary" onclick="addCustomFont()">Submit</button>
-								</div>
-							</form>
-						</div>
-						
-						<div class="col-7">
-							<div class="card-body table-responsive p-0" style="height: 300px;">
-								<table class="table table-head-fixed text-nowrap">
-									<thead>
-										<tr>
-											<th>Name</th>
-											<th></th>
-										</tr>
-									</thead>
-									<tbody>
-										{% for cf in data['custom_fonts'] %}
-											<tr id="custom_font_item_{{cf.replace(' ','_')}}">
-												<td>{{ cf }}</td>
-												<td><button class="btn btn-sm btn-danger remove" onclick="deleteCustomFont('{{cf}}')">
-													<i class="fas fa-trash-alt"></i></button></td>
-											</tr>
-										{% endfor %}
-									</tbody>
-								</table>
+			<div class="row">
+				<div class="col-12">
+					<div class="container-fluid" style="display: flex; justify-content: space-around;">
+						<div class="card card-primary">
+							<div class="card-header">
+								<h3 class="card-title">Custom Fonts</h3>
 							</div>
+							<div class="row">
+								<div class="col-5">
+									<form id="custom_fonts_form" action="">
+										<div class="card-body">
+											<div class="form-group">
+												<label for="font_name">Name</label>
+												<input type="text" class="form-control" id="font_name" placeholder="Font Name" name="font_name">
+											</div>
+											<div class="form-group">
+												<label for="font_url">URL</label>
+												<input type="url" class="form-control" id="font_url" placeholder="URL" name="font_url">
+											</div>
+												
+										</div>
+										<div class="card-footer">
+											<button  class="btn btn-primary" onclick="addCustomFont()">Submit</button>
+										</div>
+									</form>
+								</div>
+								
+								<div class="col-7">
+									<div class="card-body table-responsive p-0" style="height: 300px;">
+										<table class="table table-head-fixed text-nowrap">
+											<thead>
+												<tr>
+													<th>Name</th>
+													<th></th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for cf in data['custom_fonts'] %}
+													<tr id="custom_font_item_{{cf.replace(' ','_')}}">
+														<td>{{ cf }}</td>
+														<td><button class="btn btn-sm btn-danger remove" onclick="deleteCustomFont('{{cf}}')">
+															<i class="fas fa-trash-alt"></i></button></td>
+													</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							
+							
 						</div>
-					</div>
-					
-					
+					</div><!-- /.container-fluid -->
 				</div>
-			</div><!-- /.container-fluid -->
+
+				<div class="col-12">
+					<div class="container-fluid" style="justify-content: space-around;">
+						<div class="card card-primary">
+							<div class="card-header">
+								<h3 class="card-title">Servidor de e-mail</h3>
+							</div>
+							<div class="row">
+								<div class="col-5">
+									<form id="server_email_form" action="">
+										<div class="card-body">
+											<div class="form-group">
+												<label for="server">Servidor</label>
+												<input type="url" class="form-control" id="server" placeholder="Servidor" name="server">
+											</div>
+											<div class="form-group">
+												<label for="port">Porta</label>
+												<input type="number" class="form-control" id="port" placeholder="Porta" name="port">
+											</div>
+											<div class="form-group">
+												<label for="use_tls">Usar TLS</label>
+												<input type="checkbox" class="form-control" id="use_tls" placeholder="Usar TLS" name="use_tls">
+											</div>
+												
+										</div>
+										<div class="card-footer">
+											<button  class="btn btn-primary" onclick="addServerMail()">Submit</button>
+										</div>
+									</form>
+								</div>
+								
+								<div class="col-7">
+									<div class="card-body table-responsive p-0" style="height: 300px;">
+										<table class="table table-head-fixed text-nowrap">
+											<thead>
+												<tr>
+													<th>Servidor</th>
+													<th>Porta</th>
+													<th>Usar TLS</th>
+													<th></th>
+												</tr>
+											</thead>
+											<tbody>
+												{% for emailServer in data.email_servers %}
+													<tr id="email_server_item_{{emailServer.server.replace('.', '_').replace('/', '').replace(':', '')}}">
+														<td>{{ emailServer.server }}</td>
+														<td>{{ emailServer.port }}</td>
+														<td>
+															{% if emailServer.use_tls %}
+																<i class="fas fa-check-square"></i>
+															{% else %}
+																<i class="fas fa-square"></i>
+															{%endif%}
+														</td>
+														<td><button class="btn btn-sm btn-danger remove" onclick="deleteServerMail('{{emailServer.server}}')">
+															<i class="fas fa-trash-alt"></i></button></td>
+													</tr>
+												{% endfor %}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</div>
+							
+							
+						</div>
+					</div><!-- /.container-fluid -->
+				</div>
+			</div>
+			
 		</section>
 		<!-- /.content -->
 	</div>
@@ -100,12 +173,6 @@
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 
-	<!-- jQuery -->
-	<script src="/static/assets/plugins/jquery/jquery.min.js"></script>
-	<!-- Bootstrap 4 -->
-	<script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-	<!-- AdminLTE App -->
-	<script src="/static/assets/js/adminlte.min.js"></script>
 	<script type="text/javascript">
 		$(function(){
 			$("form").submit(function(e) {
@@ -133,6 +200,27 @@
 			$("#custom_font_item_"+cfName.replace(" ", "_")).remove();
 		}
 
+		function addServerMail(){
+			let server = $("#server").val();
+			let port = $("#port").val();
+			let use_tls = document.getElementById('use_tls').checked ? 1 : 0;
+			let data = {
+				type_request: "add_email_server",
+				server: server,
+				port: port,
+				use_tls: use_tls
+			}
+			sendData(data, "server_email_form");
+		}
+
+		function deleteServerMail(cfName){
+			let data = {
+				type_request: "del_email_server",
+				server: cfName
+			}
+			sendData(data);
+			$("#email_server_item_"+formatDomain(cfName)).remove();
+		}
 
 		function sendData(data, formID=null, method="POST") {
 			$.ajax({
@@ -141,7 +229,6 @@
 				data: data,
 				success: function(response){
 					if (formID){
-						console.log(formID)
 						$("#"+formID).find("input").val("");
 					}
 
@@ -150,6 +237,10 @@
 					console.log("error", error);
 				},
 			});
+		}
+
+		function formatDomain(text){
+			return text.replace(/./g, '_').replace(/\//g,'').replace(/:/g,'');
 		}
 
 	</script>

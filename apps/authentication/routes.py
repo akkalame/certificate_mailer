@@ -55,7 +55,7 @@ def login():
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
-@login_required
+#@login_required
 def register():
     create_account_form = CreateAccountForm(request.form)
     if 'register' in request.form:

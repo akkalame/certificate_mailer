@@ -142,8 +142,6 @@ def listStudent(filters={}, offset=0, limit=20):
 	
 	return list2_dict(query, ["id","name", "email", "dni", "code"]), count
 
-
-
 def asignRole(data_form):
 	checked = int(data_form.checked)
 	del data_form['checked']
@@ -206,12 +204,22 @@ def update_settings(data_form):
 		op = CustomFonts(**data_form)
 		result = createRecord(op)
 		if not result:
-			ioe.show_alert("Registro Exitoso")
+			ioe.show_alert(_dict(title="Registro Exitoso"))
 			build_custom_fonts(listCustomFonts())
 	elif type_request == "del_custom_font":
 		record = db.session.query(CustomFonts).filter_by(**data_form).first()
 		deleteRecord(record)
+		ioe.show_alert(_dict(title="Eliminacion Correcta"))
 		build_custom_fonts(listCustomFonts())
+	elif type_request == "add_email_server":
+		op = EmailServer(**data_form)
+		result = createRecord(op)
+		if not result:
+			ioe.show_alert(_dict(title="Registro Exitoso"))
+	elif type_request == "del_email_server":
+		record = db.session.query(EmailServer).filter_by(**data_form).first()
+		deleteRecord(record)
+		ioe.show_alert(_dict(title="Eliminacion Correcta"))
 
 def update_user(data_form):
 	type_request = data_form.type_request

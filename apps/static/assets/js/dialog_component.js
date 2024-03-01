@@ -11,7 +11,7 @@ function createModal(options) {
 
 	// Set the title and body content from options
 	$('<h5 class="modal-title"></h5>').text(options.title).appendTo(modalHeader);
-	$('<button type="button" class="close" data-dismiss="modal" aria-label="Close">').append('<span aria-hidden="true">&times;</span>').appendTo(modalHeader);
+	$(`<button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeForceModal('${options.dataId}')">`).append('<span aria-hidden="true">&times;</span>').appendTo(modalHeader);
 
 	// Add buttons if provided
 	if (options.buttons) {
@@ -130,8 +130,13 @@ function modal_progress(options={}){
 	progress.css("width", `${percentage}%`);
 	modalBody.find(".progress-description").text(description);
 	
-	if (count >= total)
+	console.log(count,total);
+	if (count >= total){
+		console.log("count mayor igual total");
 		modal.modal("dispose");
+	}
+		
+	
 }
 
 function alertToast(options={}){
@@ -146,6 +151,13 @@ function alertToast(options={}){
 		icon: options.icon || "info",
 		title: options.title || ""
 	}
-
+	console.log(args);
+	console.log(options);
 	Toast.fire(args);
+}
+
+
+function closeForceModal(dataId){
+	let modal = $(`div[data-id='${dataId}']`);
+	modal.modal("dispose");
 }

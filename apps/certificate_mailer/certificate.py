@@ -112,7 +112,9 @@ class Main():
 			css_content += f.read()
 		
 		css = CSS(string=str(css_content), font_config=font_config)
-
+		
+		ioe.progress(0, len(self.toCertificate), title="Generacíon de Certificados", 
+				 description=f" 0/{len(self.toCertificate)}")
 		for idx, d in enumerate(self.toCertificate):
 			
 			d.name = d.name.lower().title()
@@ -209,7 +211,7 @@ def make_process(data):
 
 			if int(data.sendEmail):
 				main.send_emails(data.subject, data.body, data.emailAccount,
-								data.useEmailTp,
+								int(data.useEmailTp),
 								data.emailTemplate)
 
 			#return f"{len(main.toCertificate)} certificados generados"
