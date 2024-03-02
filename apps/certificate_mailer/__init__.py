@@ -4,14 +4,8 @@ from apps.controllers import listEmailAccount, listGoogleTokens
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-def get_tokens():
-	#paths = glob.glob(os.path.join(basedir, 'tokens/*.json'))
-	#r = []
-	#for f in paths:
-	#	name = os.path.basename(f).split(".")[0]
-	#	r.append(_dict(name=name))
-	
-	records = listGoogleTokens()
+def get_tokens(filters):
+	records = listGoogleTokens(filters)
 	tokens = [_dict(name=r.name) for r in records]
 	return records
 

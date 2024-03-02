@@ -42,9 +42,9 @@ class Users(db.Model, UserMixin):
 class GoogleOAuthToken(db.Model):
 
     __tablename__ = 'Google OAuth Token'
-
+    id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer)
-    name = db.Column(db.String(64), primary_key=True)
+    name = db.Column(db.String(64))
     token = db.Column(db.String(300))
     refresh_token = db.Column(db.String(160))
     token_uri = db.Column(db.String(100))

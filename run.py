@@ -16,6 +16,7 @@ from apps import create_app, db, socketio
 DEBUG = (os.getenv('DEBUG', 'False') == 'True')
 # The configuration
 get_config_mode = 'Debug' if DEBUG else 'Production'
+print(get_config_mode)
 try:
 
     # Load the configuration using the default values

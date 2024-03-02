@@ -41,7 +41,7 @@
 	<!-- Main content -->
 	<section class="content">
 	  <div class="container-fluid" style="display: flex; justify-content: space-around;">
-			<div class="card card-primary">
+			<div class="card card-primary" style="min-width: 60%;">
 				<!-- /.card-header -->
 				<!-- form start -->
 				<form>
@@ -80,7 +80,7 @@
 									<label for="celda2Txt" class="form-label">Célula Final</label>
 									<input type="text" class="form-control" id="celda2Txt" oninput="upperCase(this)" aria-describedby="spreadCellHelp" placeholder="C4">					
 								</div>
-								<div class="col-4">
+								<div class="col-4 d-none">
 									<label for="faltaMaxima" class="form-label">Falta Máxima</label>
 									<input type="number" min="0" value="0" class="form-control" id="faltaMaxima" aria-describedby="spreadCellHelp">
 								</div>
@@ -107,7 +107,7 @@
 						</div>
 
 						<div class="form-check form-switch" group-id="email-section">
-							<div class="row" style="display: flex; justify-content: space-between;">
+							<div class="row d-none" style="display: flex; justify-content: space-between;">
 								<div class="col-4">
 									<input class="form-check-input" type="checkbox" value="" id="justSendCheck">
 									<label class="form-check-label" for="justSendCheck">

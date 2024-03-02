@@ -137,6 +137,8 @@ def get_segment(request):
 
 
 def get_data_from_segment(segment, args=_dict()):
+	user = current_user_to_arg(current_user)
+
 	if segment == "users":
 		return {"users_list": listUsers()}
 	elif segment == "roles":
@@ -153,7 +155,7 @@ def get_data_from_segment(segment, args=_dict()):
 		return {"user": user, "user_roles": roles}
 	elif segment == "gencert":
 		data = _dict(
-			credenciales=get_tokens(), 
+			credenciales=get_tokens(_dict(user_id=user.id)), 
 			plantillas=get_cert_templates(),
 			emailAccounts=get_email_accounts(),
 			emailTemplates=listEmailTemplate(),	
