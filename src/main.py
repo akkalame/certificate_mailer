@@ -22,7 +22,7 @@ from urllib.parse import unquote
 from docxtpl import DocxTemplate
 from docx2pdf import convert
 import pythoncom
-
+import pandas as pd
 
 class Main():
 	def __init__(self):
@@ -135,14 +135,10 @@ class Main():
 				dCopy.file = filePath
 				self.toSend.append(dCopy)
 
-	def send_emails(self, subject="", body="", emailAccount="", sendViaGoogle=False, useEmailTp=False, emailTemplate=""):
+	def send_emails(self, subject="", body="", emailAccount="", useEmailTp=False, emailTemplate=""):
 		print("Envío de correos electrónicos")
-		if sendViaGoogle:
-			service = self.service.gmail()
-			method = send_gmail
-		else:
-			service = self.get_smtp_service(emailAccount)
-			method = send_smtp
+		service = self.get_smtp_service(emailAccount)
+		method = send_smtp
 		if useEmailTp:
 			subject, body = get_email_tp_data_pretty(emailTemplate)
 			
@@ -207,25 +203,21 @@ def validate_path_to_save(pathToSave):
 
 def make_process(data):
 	main = Main()
-	main.connect_to_google(data.credentialName)
-	sheetId = utils.sheet_id_from_link(data.spreadLink)
-	rangeName = f"{data.cell1.upper()}:{data.cell2.upper()}"
-	rows = main.get_sheet_values(sheetId, rangeName)
-
-	rows = main.rows_to_obj(rows, int(data.cell1[1:]))
-	main.availables_to_certificate(rows, data.faltaMax)
-	if not int(data.justSend):
-		main.generate_cert(data.templatePath)
-	else:
-		main.set_just_send()
+	rows = get_estudiantes()
+	#main.availables_to_certificate(rows)
+	main.toCertificate = rows
+	#if not int(data.justSend):
+	main.generate_cert(data.templatePath)
+	#else:
+	#	main.set_just_send()
 
 	if int(data.sendEmail):
-		return main.send_emails(data.subject, data.body, data.emailAccount, int(data.sendViaGoogle),
+		return main.send_emails(data.subject, data.body, data.emailAccount,
 						  data.useEmailTp,
 						  data.emailTemplate)
 
 	return f"{len(main.toCertificate)} certificados generados"
-
+	
 def save_template(str64, nameFile=""):
 	if nameFile == "":
 		nameFile = generate_code(10)
@@ -463,6 +455,15 @@ def get_preference():
 	r = _dict()
 	for pr in preferencias:
 		r[pr.key] = pr.value
+	return r
+
+def get_estudiantes():
+	path = "./estudiantes.xlsx"
+	df = pd.read_excel(path)
+	data = df.to_dict(orient='records')
+	r = []
+	for d in data:
+		r.append(_dict(d))
 	return r
 
 
